@@ -1,9 +1,29 @@
+# Ambiente
 venv/
+.venv/
 .env
+.env.local
+
+# Banco de dados local
 data/*.db
+data/*.sqlite3
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Logs e arquivos gerados em testes
 server.log
+*.log
 *.output
 cookies.txt
 *.pdf
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
