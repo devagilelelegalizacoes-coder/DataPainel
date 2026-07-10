@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Retorno do pagamento - APIBrasil{% endblock %}
+{% block content %}
+<div class="auth-card" style="text-align:center;">
+  <div style="font-size:40px; margin-bottom:8px;">{{ "✅" if sucesso else "⏳" }}</div>
+  <h1>{{ "Pagamento aprovado" if sucesso else "Status do pagamento" }}</h1>
+  <p class="muted">{{ mensagem or "Não foi possível identificar o pagamento." }}</p>
+  <a href="/creditos" class="btn-primary">Voltar para créditos</a>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Créditos - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Comprar Créditos</h1>
+  <p class="muted">Saldo atual: <strong>{{ user.credits }}</strong> créditos · pagamento via Mercado Pago (PIX ou cartão)</p>
+</div>
+
+{% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
+
+<div class="cards-grid">
+  {% for pacote in pacotes %}
+  <div class="consulta-card">
+    <div class="consulta-card-icon">✦</div>
+    <h3>{{ pacote.nome }}</h3>
+    <p class="consulta-card-desc">{{ pacote.creditos }} créditos para usar em qualquer consulta.</p>
+    <div class="consulta-card-footer">
+      <span class="chip chip-ativo">R$ {{ "%.2f"|format(pacote.valor_reais) }}</span>
+      <form method="post" action="/creditos/comprar/{{ pacote.id }}" class="admin-inline-form">
+        <button type="submit" class="btn-primary btn-sm">Comprar</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2 class="section-title">Histórico de pagamentos</h2>
+{% if pagamentos %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Pacote</th><th>Créditos</th><th>Valor</th><th>Status</th><th>Data</th></tr>
+  </thead>
+  <tbody>
+    {% for p in pagamentos %}
+    <tr>
+      <td>{{ p.pacote_id }}</td>
+      <td>{{ p.creditos }}</td>
+      <td>R$ {{ "%.2f"|format(p.valor_centavos / 100) }}</td>
+      <td><span class="badge badge-{{ 'sucesso' if p.status == 'aprovado' else 'erro' if p.status in ('recusado', 'erro') else 'pendente' }}">{{ p.status }}</span></td>
+      <td>{{ p.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum pagamento realizado ainda.</p>
+{% endif %}
+{% endblock %}

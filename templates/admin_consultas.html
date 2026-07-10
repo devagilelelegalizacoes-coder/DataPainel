@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Administrar Consultas - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Administrar Consultas</h1>
+  <p class="muted">Ative, desative, edite o custo em créditos e crie novos tipos de consulta (cards).</p>
+</div>
+
+{% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
+
+<div class="detalhe-card admin-form-card">
+  <h3>{{ "Editar consulta" if editar else "Nova consulta" }}</h3>
+  <form method="post" action="{{ '/admin/consultas/' + editar.id + '/editar' if editar else '/admin/consultas' }}" class="admin-form">
+    <div class="admin-form-row">
+      <div>
+        <label>Nome</label>
+        <input type="text" name="nome" required value="{{ editar.nome if editar else '' }}">
+      </div>
+      <div>
+        <label>Ícone (emoji)</label>
+        <input type="text" name="icone" maxlength="4" value="{{ editar.icone if editar else '🔍' }}">
+      </div>
+      <div>
+        <label>Custo (créditos)</label>
+        <input type="number" name="custo_creditos" min="0" required value="{{ editar.custo_creditos if editar else 1 }}">
+      </div>
+    </div>
+
+    <label>Descrição</label>
+    <input type="text" name="descricao" value="{{ editar.descricao if editar else '' }}">
+
+    <div class="admin-form-row">
+      <div>
+        <label>Label do campo de busca</label>
+        <input type="text" name="campo_label" value="{{ editar.campo_label if editar else 'Placa' }}">
+      </div>
+      <div>
+        <label>Placeholder do campo</label>
+        <input type="text" name="campo_placeholder" value="{{ editar.campo_placeholder if editar else 'Ex: ABC1234' }}">
+      </div>
+    </div>
+
+    <div class="admin-form-actions">
+      <button type="submit" class="btn-primary btn-sm">{{ "Salvar alterações" if editar else "Criar consulta" }}</button>
+      {% if editar %}<a href="/admin/consultas" class="btn-link">Cancelar</a>{% endif %}
+    </div>
+  </form>
+</div>
+
+<h2 class="section-title">Consultas cadastradas</h2>
+<div class="cards-grid">
+  {% for tipo in tipos %}
+  <div class="consulta-card {% if not tipo.disponivel %}consulta-card-disabled{% endif %}">
+    <div class="consulta-card-icon">{{ tipo.icone }}</div>
+    <h3>{{ tipo.nome }}</h3>
+    <p class="consulta-card-desc">{{ tipo.descricao }}</p>
+    <div class="consulta-card-footer">
+      <span class="chip">{{ tipo.custo_creditos }} créditos</span>
+      <span class="chip {% if tipo.disponivel %}chip-ativo{% else %}chip-muted{% endif %}">
+        {{ "Ativo" if tipo.disponivel else "Inativo" }}
+      </span>
+    </div>
+    <div class="admin-card-actions">
+      <a href="/admin/consultas/{{ tipo.id }}/editar" class="btn-link">Editar</a>
+      <form method="post" action="/admin/consultas/{{ tipo.id }}/toggle" class="admin-inline-form">
+        <button type="submit" class="btn-link">{{ "Desativar" if tipo.disponivel else "Ativar" }}</button>
+      </form>
+      <form method="post" action="/admin/consultas/{{ tipo.id }}/excluir" class="admin-inline-form" onsubmit="return confirm('Excluir esta consulta permanentemente?');">
+        <button type="submit" class="btn-link btn-link-danger">Excluir</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Consulta #{{ consulta.id }} - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header detalhe-header">
+  <div>
+    <a href="/consultas" class="back-link">&larr; Voltar para consultas</a>
+    <h1>Consulta {{ consulta.placa }}</h1>
+    <p class="muted">
+      {{ tipo.nome if tipo else consulta.tipo }} · realizada em {{ consulta.created_at }} ·
+      <span class="badge badge-{{ consulta.status }}">{{ consulta.status }}</span>
+    </p>
+  </div>
+  {% if consulta.status == "sucesso" %}
+  <a href="/consultas/historico/{{ consulta.id }}/pdf" class="btn-primary btn-sm">⬇ Baixar PDF</a>
+  {% endif %}
+</div>
+
+{% if consulta.status != "sucesso" %}
+<p class="alert alert-error">{{ consulta.erro_mensagem or "Esta consulta não retornou dados." }}</p>
+{% elif not campos_principais and not secoes %}
+<p class="alert alert-error">Esta consulta não possui dados detalhados para exibir.</p>
+{% else %}
+
+<div class="detalhe-grid">
+  {% if campos_principais %}
+  <div class="detalhe-card">
+    <h3>Dados principais</h3>
+    <dl class="detalhe-list">
+      {% for label, valor in campos_principais %}
+      <dt>{{ label }}</dt><dd>{{ valor }}</dd>
+      {% endfor %}
+    </dl>
+  </div>
+  {% endif %}
+
+  {% for secao in secoes %}
+  <div class="detalhe-card">
+    <h3>{{ secao.titulo }}</h3>
+    {% if secao.campos %}
+    <dl class="detalhe-list">
+      {% for label, valor in secao.campos %}
+      <dt>{{ label }}</dt><dd>{{ valor }}</dd>
+      {% endfor %}
+    </dl>
+    {% endif %}
+    {% if secao.itens %}
+    <ul class="restricoes-list">
+      {% for item in secao.itens %}
+      <li class="{% if 'NADA CONSTA' in item.upper() %}restricao-ok{% else %}restricao-alerta{% endif %}">{{ item }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

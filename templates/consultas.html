@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Consultas - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Consultas</h1>
+  <p class="muted">Escolha o tipo de consulta que deseja realizar. O custo em créditos é debitado do seu saldo.</p>
+</div>
+
+{% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
+
+<div class="cards-grid">
+  {% for tipo in tipos %}
+  <div class="consulta-card {% if not tipo.disponivel %}consulta-card-disabled{% endif %}">
+    <div class="consulta-card-icon">{{ tipo.icone }}</div>
+    <h3>{{ tipo.nome }}</h3>
+    <p class="consulta-card-desc">{{ tipo.descricao }}</p>
+    <div class="consulta-card-footer">
+      <span class="chip">{{ tipo.custo_creditos }} créditos</span>
+      {% if tipo.disponivel %}
+      <button type="button" class="btn-primary btn-sm" onclick="abrirModal('{{ tipo.id }}', '{{ tipo.nome }}', '{{ tipo.campo_label }}', '{{ tipo.campo_placeholder }}')">
+        Consultar
+      </button>
+      {% else %}
+      <span class="chip chip-muted">Em breve</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if resultado %}
+<h2 class="section-title">Resultado{% if tipo_ativo %} · {{ tipo_ativo.nome }}{% endif %}</h2>
+<pre class="result-box">{{ resultado_json }}</pre>
+{% endif %}
+
+<h2 class="section-title">Histórico</h2>
+{% if consultas %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Tipo</th><th>Placa</th><th>Status</th><th>Custo</th><th>Resumo / Erro</th><th>Data</th></tr>
+  </thead>
+  <tbody>
+    {% for c in consultas %}
+    <tr class="table-row-link" onclick="window.location='/consultas/historico/{{ c.id }}'">
+      <td>{{ c.tipo }}</td>
+      <td>{{ c.placa }}</td>
+      <td><span class="badge badge-{{ c.status }}">{{ c.status }}</span></td>
+      <td>{{ c.custo_creditos }}</td>
+      <td>{{ c.resultado_resumo or c.erro_mensagem or "-" }}</td>
+      <td>{{ c.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhuma consulta ainda.</p>
+{% endif %}
+
+<div id="modal-overlay" class="modal-overlay" onclick="fecharModalClique(event)">
+  <div class="modal-box">
+    <button type="button" class="modal-close" onclick="fecharModal()">&times;</button>
+    <h3 id="modal-titulo">Consultar</h3>
+    <form id="modal-form" method="post" action="">
+      <label id="modal-label" for="modal-input">Placa</label>
+      <input id="modal-input" type="text" name="placa" required maxlength="8" style="text-transform:uppercase">
+      <button type="submit" class="btn-primary">Confirmar consulta</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModal(tipoId, nome, label, placeholder) {
+    document.getElementById("modal-titulo").textContent = nome;
+    document.getElementById("modal-label").textContent = label;
+    document.getElementById("modal-input").placeholder = placeholder;
+    document.getElementById("modal-form").action = "/consultas/" + tipoId;
+    document.getElementById("modal-overlay").classList.add("modal-open");
+    document.getElementById("modal-input").focus();
+  }
+  function fecharModal() {
+    document.getElementById("modal-overlay").classList.remove("modal-open");
+  }
+  function fecharModalClique(event) {
+    if (event.target.id === "modal-overlay") fecharModal();
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p class="muted">Olá, {{ user.name }}. Aqui está um resumo da sua conta.</p>
+</div>
+
+<div class="cards-row">
+  <div class="stat-card">
+    <span class="stat-icon">✦</span>
+    <span class="stat-label">Saldo de créditos</span>
+    <span class="stat-value">{{ user.credits }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">🔍</span>
+    <span class="stat-label">Consultas realizadas</span>
+    <span class="stat-value">{{ total_consultas }}</span>
+  </div>
+  <div class="stat-card stat-card-action">
+    <span class="stat-icon">➕</span>
+    <span class="stat-label">Nova consulta</span>
+    <a href="/consultas" class="btn-primary btn-sm">Consultar agora</a>
+  </div>
+</div>
+
+<h2 class="section-title">Últimas consultas</h2>
+{% if consultas %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Tipo</th><th>Placa</th><th>Status</th><th>Custo (créditos)</th><th>Resumo</th><th>Data</th></tr>
+  </thead>
+  <tbody>
+    {% for c in consultas %}
+    <tr class="table-row-link" onclick="window.location='/consultas/historico/{{ c.id }}'">
+      <td>{{ c.tipo }}</td>
+      <td>{{ c.placa }}</td>
+      <td><span class="badge badge-{{ c.status }}">{{ c.status }}</span></td>
+      <td>{{ c.custo_creditos }}</td>
+      <td>{{ c.resultado_resumo or c.erro_mensagem or "-" }}</td>
+      <td>{{ c.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhuma consulta realizada ainda. <a href="/consultas">Fazer a primeira consulta</a></p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}APIBrasil{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  {% if user %}
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="navbar-logo">◆</span> APIBrasil
+    </div>
+    <div class="navbar-links">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/consultas">Consultas</a>
+      <a href="/creditos">Créditos</a>
+      {% if user.is_admin %}<a href="/admin/consultas">Admin</a>{% endif %}
+    </div>
+    <div class="navbar-user">
+      <span class="credits-pill">✦ {{ user.credits }} créditos</span>
+      <span class="navbar-name">{{ user.name }}</span>
+      <a href="/logout" class="btn-link">Sair</a>
+    </div>
+  </nav>
+  {% endif %}
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

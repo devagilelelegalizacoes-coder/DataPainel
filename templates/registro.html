@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Cadastro - APIBrasil{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>Criar conta</h1>
+  {% if error %}<p class="alert alert-error">{{ error }}</p>{% endif %}
+  <form method="post" action="/registro">
+    <label>Nome</label>
+    <input type="text" name="name" required autofocus>
+
+    <label>E-mail</label>
+    <input type="email" name="email" required>
+
+    <label>Senha</label>
+    <input type="password" name="password" required minlength="6">
+
+    <button type="submit" class="btn-primary">Criar conta (10 créditos grátis)</button>
+  </form>
+  <p class="auth-footer">Já tem conta? <a href="/login">Entrar</a></p>
+</div>
+{% endblock %}
