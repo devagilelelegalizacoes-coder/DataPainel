@@ -37,6 +37,10 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Schema SQLite | `app/database.py` |
 | Templates | `templates/*.html`, estende `base.html` |
 | CSS único, tema claro/moderno | `static/style.css` (variáveis em `:root`) |
+| Registro dos tipos de consulta (**agora em SQLite**, não dict fixo) | `app/consulta_types.py` (tabela `tipos_consulta`) |
+| Painel admin (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
+| Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
+| Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
 
 ## Padrão obrigatório: adicionar um novo tipo de consulta
 
