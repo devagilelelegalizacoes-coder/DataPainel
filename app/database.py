@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tipos_consulta (
     campo_label TEXT NOT NULL DEFAULT 'Placa',
     campo_placeholder TEXT NOT NULL DEFAULT 'Ex: ABC1234',
     disponivel INTEGER NOT NULL DEFAULT 1,
+    campos_incluidos TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -228,6 +229,31 @@ def _ensure_tipo_ativo(conn: sqlite3.Connection, tipo_id: str) -> None:
     conn.execute("UPDATE tipos_consulta SET disponivel = 1 WHERE id = ?", (tipo_id,))
 
 
+CAMPOS_INCLUIDOS = {
+    "base-nacional-v2": "Dados do veículo\nMarca, modelo, ano, cor, chassi, motor, renavam\nRestrições (roubo/furto, judicial, tributária)\nSituação e município",
+    "nacional": "Dados do veículo e proprietário\nRestrições gerais e RENAJUD\nComunicação de venda\nGravame comercial (financiadora, contrato, tipo de transação)",
+    "estadual": "Dados do veículo (base estadual)\nProprietário\nRestrições (DPVAT, geral, roubo/furto, RENAJUD)",
+    "gravame": "Financiadora e nº do contrato\nStatus de alienação fiduciária\nNome do financiado\nHistórico de movimentações do gravame",
+    "analitico-veicular": "Relatório em PDF pronto\nFIPE\nProprietário atual\nHistórico de KM\nRENAJUD e RENAINF\nRoubo/furto\nRecall",
+    "relatorio-veicular": "Relatório em PDF com identidade visual personalizável\nDados do veículo\nFIPE\nProprietário atual",
+    "veicular-agrupados": "Dados do veículo (agregados própria)\nTabela FIPE com histórico de preços\nProprietário atual",
+    "agregados-propria": "Placa, chassi, marca/modelo, versão\nAno fabricação/modelo\nCor, combustível, motor\nUF e cidade de emplacamento",
+    "leilao": "Análise de risco do veículo\nDados básicos do veículo\nHistórico de registros de leilão (comitente, data, condição)",
+}
+
+
+def _ensure_campos_incluidos(conn: sqlite3.Connection) -> None:
+    for tipo_id, campos in CAMPOS_INCLUIDOS.items():
+        atual = conn.execute(
+            "SELECT campos_incluidos FROM tipos_consulta WHERE id = ?", (tipo_id,)
+        ).fetchone()
+        if atual is not None and not atual["campos_incluidos"]:
+            conn.execute(
+                "UPDATE tipos_consulta SET campos_incluidos = ? WHERE id = ?",
+                (campos, tipo_id),
+            )
+
+
 def _ensure_admin_exists(conn: sqlite3.Connection) -> None:
     has_admin = conn.execute("SELECT COUNT(*) AS n FROM users WHERE is_admin = 1").fetchone()["n"]
     if has_admin:
@@ -243,6 +269,7 @@ def init_db() -> None:
         _ensure_column(conn, "consultas", "tipo", "tipo TEXT NOT NULL DEFAULT 'base-nacional-v2'")
         _ensure_column(conn, "consultas", "resultado_json", "resultado_json TEXT")
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "tipos_consulta", "campos_incluidos", "campos_incluidos TEXT NOT NULL DEFAULT ''")
         _seed_tipos_consulta(conn)
         _ensure_seed_row(conn, "nacional")
         _ensure_seed_row(conn, "estadual")
@@ -251,4 +278,5 @@ def init_db() -> None:
         _ensure_seed_row(conn, "veicular-agrupados")
         _ensure_seed_row(conn, "relatorio-veicular")
         _ensure_tipo_ativo(conn, "leilao")
+        _ensure_campos_incluidos(conn)
         _ensure_admin_exists(conn)

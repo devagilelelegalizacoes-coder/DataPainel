@@ -13,6 +13,11 @@ class ConsultaType:
     campo_label: str
     campo_placeholder: str
     disponivel: bool = True
+    campos_incluidos: str = ""
+
+    @property
+    def lista_campos_incluidos(self) -> list[str]:
+        return [c.strip() for c in self.campos_incluidos.splitlines() if c.strip()]
 
 
 def _row_to_type(row) -> ConsultaType:
@@ -25,6 +30,7 @@ def _row_to_type(row) -> ConsultaType:
         campo_label=row["campo_label"],
         campo_placeholder=row["campo_placeholder"],
         disponivel=bool(row["disponivel"]),
+        campos_incluidos=row["campos_incluidos"] if "campos_incluidos" in row.keys() else "",
     )
 
 
@@ -53,15 +59,16 @@ def criar_consulta_type(
     campo_label: str = "Placa",
     campo_placeholder: str = "Ex: ABC1234",
     disponivel: bool = True,
+    campos_incluidos: str = "",
 ) -> ConsultaType:
     with db_session() as conn:
         conn.execute(
             """
             INSERT INTO tipos_consulta
-                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel)),
+            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos),
         )
     return get_consulta_type(id)
 
@@ -74,16 +81,17 @@ def atualizar_consulta_type(
     custo_creditos: int,
     campo_label: str,
     campo_placeholder: str,
+    campos_incluidos: str = "",
 ) -> None:
     with db_session() as conn:
         conn.execute(
             """
             UPDATE tipos_consulta
             SET nome = ?, descricao = ?, icone = ?, custo_creditos = ?,
-                campo_label = ?, campo_placeholder = ?
+                campo_label = ?, campo_placeholder = ?, campos_incluidos = ?
             WHERE id = ?
             """,
-            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, tipo_id),
+            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, tipo_id),
         )
 
 

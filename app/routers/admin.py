@@ -75,6 +75,7 @@ def admin_consulta_criar(
     custo_creditos: int = Form(...),
     campo_label: str = Form("Placa"),
     campo_placeholder: str = Form("Ex: ABC1234"),
+    campos_incluidos: str = Form(""),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -104,6 +105,7 @@ def admin_consulta_criar(
         campo_label=campo_label or "Placa",
         campo_placeholder=campo_placeholder or "Ex: ABC1234",
         disponivel=False,
+        campos_incluidos=campos_incluidos,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -118,6 +120,7 @@ def admin_consulta_editar(
     custo_creditos: int = Form(...),
     campo_label: str = Form("Placa"),
     campo_placeholder: str = Form("Ex: ABC1234"),
+    campos_incluidos: str = Form(""),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -134,6 +137,7 @@ def admin_consulta_editar(
         custo_creditos=max(0, custo_creditos),
         campo_label=campo_label or "Placa",
         campo_placeholder=campo_placeholder or "Ex: ABC1234",
+        campos_incluidos=campos_incluidos,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 

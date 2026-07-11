@@ -14,6 +14,13 @@
     <div class="consulta-card-icon">{{ tipo.icone }}</div>
     <h3>{{ tipo.nome }}</h3>
     <p class="consulta-card-desc">{{ tipo.descricao }}</p>
+    {% if tipo.lista_campos_incluidos %}
+    <ul class="consulta-card-campos">
+      {% for campo in tipo.lista_campos_incluidos %}
+      <li>{{ campo }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
     <div class="consulta-card-footer">
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
       {% if tipo.disponivel %}

@@ -40,6 +40,9 @@
       </div>
     </div>
 
+    <label>O que essa consulta traz (um item por linha, exibido no card)</label>
+    <textarea name="campos_incluidos" rows="4" placeholder="Dados do veículo&#10;Restrições&#10;Histórico de proprietários">{{ editar.lista_campos_incluidos|join('\n') if editar else '' }}</textarea>
+
     <div class="admin-form-actions">
       <button type="submit" class="btn-primary btn-sm">{{ "Salvar alterações" if editar else "Criar consulta" }}</button>
       {% if editar %}<a href="/admin/consultas" class="btn-link">Cancelar</a>{% endif %}
