@@ -92,6 +92,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "nacional",
+        "Base Nacional",
+        "Veículo, restrições, comunicação de venda e gravame comercial (financiamento).",
+        "📋",
+        5,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "agregados-propria",
         "Agregados Própria",
         "Consulta de veículos agregados à frota própria vinculados à placa.",
@@ -148,6 +158,22 @@ def _seed_tipos_consulta(conn: sqlite3.Connection) -> None:
     )
 
 
+def _ensure_seed_row(conn: sqlite3.Connection, tipo_id: str) -> None:
+    existe = conn.execute("SELECT 1 FROM tipos_consulta WHERE id = ?", (tipo_id,)).fetchone()
+    if existe:
+        return
+    row = next((t for t in SEED_TIPOS_CONSULTA if t[0] == tipo_id), None)
+    if row:
+        conn.execute(
+            """
+            INSERT INTO tipos_consulta
+                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            row,
+        )
+
+
 def _ensure_admin_exists(conn: sqlite3.Connection) -> None:
     has_admin = conn.execute("SELECT COUNT(*) AS n FROM users WHERE is_admin = 1").fetchone()["n"]
     if has_admin:
@@ -164,4 +190,5 @@ def init_db() -> None:
         _ensure_column(conn, "consultas", "resultado_json", "resultado_json TEXT")
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
         _seed_tipos_consulta(conn)
+        _ensure_seed_row(conn, "nacional")
         _ensure_admin_exists(conn)
