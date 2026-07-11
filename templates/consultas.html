@@ -28,11 +28,6 @@
   {% endfor %}
 </div>
 
-{% if resultado %}
-<h2 class="section-title">Resultado{% if tipo_ativo %} · {{ tipo_ativo.nome }}{% endif %}</h2>
-<pre class="result-box">{{ resultado_json }}</pre>
-{% endif %}
-
 <h2 class="section-title">Histórico</h2>
 {% if consultas %}
 <div class="table-wrap">

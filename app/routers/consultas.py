@@ -94,7 +94,7 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
         if erro is None:
             try:
                 resultado = _executar_consulta(tipo.id, placa)
-                registrar_consulta(
+                consulta_id = registrar_consulta(
                     user_id=user["id"],
                     tipo=tipo.id,
                     placa=placa,
@@ -103,6 +103,7 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
                     resultado_resumo=_resumo_veiculo(resultado),
                     resultado_json=json.dumps(resultado, ensure_ascii=False),
                 )
+                return RedirectResponse(url=f"/consultas/historico/{consulta_id}", status_code=303)
             except APIBrasilError as exc:
                 estornar_creditos(user["id"], custo)
                 registrar_consulta(
@@ -126,8 +127,6 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
             "consultas": consultas,
             "tipos": listar_consulta_types(),
             "tipo_ativo": tipo,
-            "resultado": resultado,
-            "resultado_json": json.dumps(resultado, indent=2, ensure_ascii=False) if resultado else None,
             "erro": erro,
         },
     )
