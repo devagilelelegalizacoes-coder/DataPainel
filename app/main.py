@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -37,6 +37,9 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return RedirectResponse(url="/login")
+    return """<!doctype html>
+<html lang="pt-br"><head><meta charset="utf-8">
+<meta http-equiv="refresh" content="0; url=/login"></head>
+<body>Redirecionando para <a href="/login">/login</a>...</body></html>"""
