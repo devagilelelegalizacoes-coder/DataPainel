@@ -112,6 +112,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "gravame",
+        "Gravame",
+        "Consulta de gravame (financiamento/alienação) vinculado à placa.",
+        "🔒",
+        5,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "agregados-propria",
         "Agregados Própria",
         "Consulta de veículos agregados à frota própria vinculados à placa.",
@@ -202,4 +212,5 @@ def init_db() -> None:
         _seed_tipos_consulta(conn)
         _ensure_seed_row(conn, "nacional")
         _ensure_seed_row(conn, "estadual")
+        _ensure_seed_row(conn, "gravame")
         _ensure_admin_exists(conn)
