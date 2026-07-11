@@ -122,6 +122,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "analitico-veicular",
+        "Analítico Veicular",
+        "Relatório completo: FIPE, proprietário atual, histórico de KM, RENAJUD, RENAINF, roubo/furto e recall.",
+        "🧾",
+        8,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "agregados-propria",
         "Agregados Própria",
         "Consulta de veículos agregados à frota própria vinculados à placa.",
@@ -213,4 +223,5 @@ def init_db() -> None:
         _ensure_seed_row(conn, "nacional")
         _ensure_seed_row(conn, "estadual")
         _ensure_seed_row(conn, "gravame")
+        _ensure_seed_row(conn, "analitico-veicular")
         _ensure_admin_exists(conn)
