@@ -132,6 +132,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "relatorio-veicular",
+        "Veicular Relatório",
+        "Relatório em PDF com dados do veículo, FIPE e proprietário atual, com identidade visual personalizável.",
+        "📄",
+        7,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "veicular-agrupados",
         "Veicular Agrupados",
         "Consulta combinada: agregados própria, FIPE e proprietário atual em uma única chamada.",
@@ -235,4 +245,5 @@ def init_db() -> None:
         _ensure_seed_row(conn, "gravame")
         _ensure_seed_row(conn, "analitico-veicular")
         _ensure_seed_row(conn, "veicular-agrupados")
+        _ensure_seed_row(conn, "relatorio-veicular")
         _ensure_admin_exists(conn)
