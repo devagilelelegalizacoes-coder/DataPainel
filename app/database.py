@@ -189,7 +189,7 @@ SEED_TIPOS_CONSULTA = [
         4,
         "Placa",
         "Ex: ABC1234",
-        0,
+        1,
     ),
 ]
 
@@ -224,6 +224,10 @@ def _ensure_seed_row(conn: sqlite3.Connection, tipo_id: str) -> None:
         )
 
 
+def _ensure_tipo_ativo(conn: sqlite3.Connection, tipo_id: str) -> None:
+    conn.execute("UPDATE tipos_consulta SET disponivel = 1 WHERE id = ?", (tipo_id,))
+
+
 def _ensure_admin_exists(conn: sqlite3.Connection) -> None:
     has_admin = conn.execute("SELECT COUNT(*) AS n FROM users WHERE is_admin = 1").fetchone()["n"]
     if has_admin:
@@ -246,4 +250,5 @@ def init_db() -> None:
         _ensure_seed_row(conn, "analitico-veicular")
         _ensure_seed_row(conn, "veicular-agrupados")
         _ensure_seed_row(conn, "relatorio-veicular")
+        _ensure_tipo_ativo(conn, "leilao")
         _ensure_admin_exists(conn)
