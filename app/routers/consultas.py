@@ -26,6 +26,7 @@ from apibrasil.base_nacional_v2 import (
     BaseNacionalV2Service,
 )
 from apibrasil.gravame import GravameService
+from apibrasil.veicular_agrupados import VeicularAgrupadosService
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -63,6 +64,10 @@ def _executar_consulta(tipo_id: str, valor: str) -> dict:
 
     if tipo_id == "analitico-veicular":
         service = AnaliticoVeicularService(config)
+        return service.consultar_placa(placa=valor, homolog=False)
+
+    if tipo_id == "veicular-agrupados":
+        service = VeicularAgrupadosService(config)
         return service.consultar_placa(placa=valor, homolog=False)
 
     raise APIBrasilError("Tipo de consulta ainda não implementado", status_code=501)

@@ -132,6 +132,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "veicular-agrupados",
+        "Veicular Agrupados",
+        "Consulta combinada: agregados própria, FIPE e proprietário atual em uma única chamada.",
+        "📦",
+        6,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "agregados-propria",
         "Agregados Própria",
         "Consulta de veículos agregados à frota própria vinculados à placa.",
@@ -224,4 +234,5 @@ def init_db() -> None:
         _ensure_seed_row(conn, "estadual")
         _ensure_seed_row(conn, "gravame")
         _ensure_seed_row(conn, "analitico-veicular")
+        _ensure_seed_row(conn, "veicular-agrupados")
         _ensure_admin_exists(conn)
