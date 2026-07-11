@@ -49,8 +49,10 @@ class PagamentoService:
                 "failure": f"{self._config.app_base_url}/creditos/retorno",
                 "pending": f"{self._config.app_base_url}/creditos/retorno",
             },
-            "auto_return": "approved",
         }
+
+        if self._config.app_base_url.startswith("https://"):
+            preference_data["auto_return"] = "approved"
 
         resultado = self._sdk.preference().create(preference_data)
         if resultado.get("status") not in (200, 201):
