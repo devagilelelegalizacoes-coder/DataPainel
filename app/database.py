@@ -102,6 +102,16 @@ SEED_TIPOS_CONSULTA = [
         1,
     ),
     (
+        "estadual",
+        "Base Estadual",
+        "Dados do veículo junto à base estadual de trânsito.",
+        "🏛️",
+        5,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
         "agregados-propria",
         "Agregados Própria",
         "Consulta de veículos agregados à frota própria vinculados à placa.",
@@ -191,4 +201,5 @@ def init_db() -> None:
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
         _seed_tipos_consulta(conn)
         _ensure_seed_row(conn, "nacional")
+        _ensure_seed_row(conn, "estadual")
         _ensure_admin_exists(conn)

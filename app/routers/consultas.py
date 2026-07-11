@@ -17,6 +17,7 @@ from app.credits import (
 )
 from app.pdf_report import gerar_pdf_consulta
 from apibrasil.agregados_propria import AgregadosPropriaService
+from apibrasil.base_estadual import BaseEstadualService
 from apibrasil.base_nacional import BaseNacionalService
 from apibrasil.base_nacional_v2 import (
     APIBrasilConfig,
@@ -48,6 +49,10 @@ def _executar_consulta(tipo_id: str, valor: str) -> dict:
 
     if tipo_id == "nacional":
         service = BaseNacionalService(config)
+        return service.consultar_placa(placa=valor, homolog=False)
+
+    if tipo_id == "estadual":
+        service = BaseEstadualService(config)
         return service.consultar_placa(placa=valor, homolog=False)
 
     raise APIBrasilError("Tipo de consulta ainda não implementado", status_code=501)
