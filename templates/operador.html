@@ -57,38 +57,4 @@
 {% else %}
 <p class="muted">Nenhum atendimento em andamento.</p>
 {% endif %}
-
-<script>
-  let idsConhecidos = new Set({{ pendentes|map(attribute='id')|list|tojson }});
-
-  function tocarBip() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.35);
-    } catch (e) {}
-  }
-
-  async function verificarNovosPedidos() {
-    try {
-      const resp = await fetch("/operador/api/pendentes-ids");
-      const data = await resp.json();
-      const novos = data.ids.filter(id => !idsConhecidos.has(id));
-      if (novos.length > 0) {
-        tocarBip();
-        setTimeout(() => window.location.reload(), 1200);
-      } else if (data.ids.length !== idsConhecidos.size) {
-        window.location.reload();
-      }
-    } catch (e) {}
-  }
-
-  setInterval(verificarNovosPedidos, 6000);
-</script>
 {% endblock %}

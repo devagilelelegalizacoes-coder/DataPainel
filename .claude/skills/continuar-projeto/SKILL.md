@@ -105,9 +105,20 @@ na mesma `consulta_detalhe.html` de sempre (branch por status, não template nov
   `UPDATE ... WHERE status='pendente' AND operador_id IS NULL` com checagem de `rowcount == 1`
   (`reivindicar_consulta()` em `app/credits.py`) — é assim que se evita dois operadores pegando o
   mesmo pedido; não trocar por um `SELECT` seguido de `UPDATE` separado (condição de corrida).
-- Aviso sonoro é só Web Audio API (`OscillatorNode` gerado em JS, sem arquivo de áudio) + polling a
-  cada 6s em `/operador/api/pendentes-ids` comparando IDs conhecidos — não precisa de
-  websocket/SSE pra esse volume.
+- Aviso sonoro é só Web Audio API (`OscillatorNode` gerado em JS, sem arquivo de áudio) — não precisa
+  de websocket/SSE pra esse volume. **O polling roda em `base.html`, global, para todo usuário
+  `is_operador`/`is_admin`, em qualquer página do sistema — não só em `/operador`.** Isso foi uma
+  correção depois que o operador não recebia aviso porque a tela `/operador` não estava aberta no
+  navegador (o polling antigo vivia só dentro de `templates/operador.html`, então só funcionava com
+  aquela aba especificamente aberta). O script global usa `localStorage` (chave
+  `operador_fila_ids_conhecidos`) para lembrar quais IDs já eram conhecidos **entre navegações de
+  página** (uma variável JS comum se perderia a cada `location.reload()`/troca de página) e só bipa
+  em IDs realmente novos — nunca bipar no primeiro carregamento (`localStorage.getItem(CHAVE_IDS) ===
+  null` é o sinal de "ainda não tenho baseline", não "fila vazia"; comparar por `.size === 0` está
+  errado, dispara falso-positivo depois que a fila esvazia uma vez). O badge de contagem no link
+  "Operador" da navbar (`#nav-badge-fila`) é atualizado pelo mesmo script, e a página `/operador` só
+  recebe `reload()` automático quando o usuário já está nela. `templates/operador.html` não tem mais
+  polling próprio — depender do script global em `base.html` para não duplicar fetch/beep.
 - Conclusão aceita observação em texto e/ou upload de arquivo. **Arquivo é comprimido com
   `gzip.compress()` antes de virar BLOB no SQLite** (colunas `anexo_blob`/`anexo_nome`/`anexo_tipo`/
   `anexo_tamanho_original` em `consultas`) e descomprimido só na hora do download

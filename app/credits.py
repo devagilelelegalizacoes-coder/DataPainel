@@ -99,6 +99,14 @@ def listar_pendentes_manuais() -> list[dict]:
         return [dict(row) for row in rows]
 
 
+def contar_pendentes_manuais() -> int:
+    with db_session() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM consultas WHERE status = 'pendente' AND operador_id IS NULL"
+        ).fetchone()
+        return row["n"]
+
+
 def listar_em_atendimento(operador_id: int) -> list[dict]:
     with db_session() as conn:
         rows = conn.execute(
