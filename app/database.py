@@ -173,21 +173,21 @@ SEED_TIPOS_CONSULTA = [
         0,
     ),
     (
-        "debitos-multas",
-        "Débitos e Multas",
-        "Consulta de multas, IPVA e débitos em aberto vinculados ao veículo.",
-        "💰",
-        6,
-        "Placa",
-        "Ex: ABC1234",
-        0,
-    ),
-    (
         "leilao",
         "Histórico de Leilão",
         "Verifica se o veículo já passou por leilão e detalhes do lote.",
         "🔨",
         4,
+        "Placa",
+        "Ex: ABC1234",
+        1,
+    ),
+    (
+        "debitos-v4",
+        "Débitos e Multas",
+        "Consulta de IPVA, licenciamento, multas e outros débitos em aberto vinculados à placa.",
+        "💰",
+        6,
         "Placa",
         "Ex: ABC1234",
         1,
@@ -229,6 +229,19 @@ def _ensure_tipo_ativo(conn: sqlite3.Connection, tipo_id: str) -> None:
     conn.execute("UPDATE tipos_consulta SET disponivel = 1 WHERE id = ?", (tipo_id,))
 
 
+def _ensure_debitos_v4_migrado(conn: sqlite3.Connection) -> None:
+    tem_novo = conn.execute("SELECT 1 FROM tipos_consulta WHERE id = 'debitos-v4'").fetchone()
+    if tem_novo:
+        return
+    tem_antigo = conn.execute("SELECT 1 FROM tipos_consulta WHERE id = 'debitos-multas'").fetchone()
+    if tem_antigo:
+        conn.execute(
+            "UPDATE tipos_consulta SET id = 'debitos-v4', disponivel = 1 WHERE id = 'debitos-multas'"
+        )
+    else:
+        _ensure_seed_row(conn, "debitos-v4")
+
+
 CAMPOS_INCLUIDOS = {
     "base-nacional-v2": "Dados do veículo\nMarca, modelo, ano, cor, chassi, motor, renavam\nRestrições (roubo/furto, judicial, tributária)\nSituação e município",
     "nacional": "Dados do veículo e proprietário\nRestrições gerais e RENAJUD\nComunicação de venda\nGravame comercial (financiadora, contrato, tipo de transação)",
@@ -239,6 +252,7 @@ CAMPOS_INCLUIDOS = {
     "veicular-agrupados": "Dados do veículo (agregados própria)\nTabela FIPE com histórico de preços\nProprietário atual",
     "agregados-propria": "Placa, chassi, marca/modelo, versão\nAno fabricação/modelo\nCor, combustível, motor\nUF e cidade de emplacamento",
     "leilao": "Análise de risco do veículo\nDados básicos do veículo\nHistórico de registros de leilão (comitente, data, condição)",
+    "debitos-v4": "IPVA em aberto\nLicenciamento em aberto\nMultas detalhadas (data, local, valor, artigo, pontos)\nOutros débitos e restrições",
 }
 
 
@@ -278,5 +292,6 @@ def init_db() -> None:
         _ensure_seed_row(conn, "veicular-agrupados")
         _ensure_seed_row(conn, "relatorio-veicular")
         _ensure_tipo_ativo(conn, "leilao")
+        _ensure_debitos_v4_migrado(conn)
         _ensure_campos_incluidos(conn)
         _ensure_admin_exists(conn)

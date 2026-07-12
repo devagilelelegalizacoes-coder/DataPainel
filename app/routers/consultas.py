@@ -25,6 +25,7 @@ from apibrasil.base_nacional_v2 import (
     APIBrasilError,
     BaseNacionalV2Service,
 )
+from apibrasil.debitos_v4 import DebitosV4Service
 from apibrasil.gravame import GravameService
 from apibrasil.leilao import LeilaoService
 from apibrasil.veicular_agrupados import VeicularAgrupadosService
@@ -78,6 +79,10 @@ def _executar_consulta(tipo_id: str, valor: str) -> dict:
 
     if tipo_id == "leilao":
         service = LeilaoService(config)
+        return service.consultar_placa(placa=valor, homolog=False)
+
+    if tipo_id == "debitos-v4":
+        service = DebitosV4Service(config)
         return service.consultar_placa(placa=valor, homolog=False)
 
     raise APIBrasilError("Tipo de consulta ainda não implementado", status_code=501)
