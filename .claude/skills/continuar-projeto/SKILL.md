@@ -36,7 +36,7 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Geração de PDF | `app/pdf_report.py` |
 | Schema SQLite + seeds/migrações de `tipos_consulta` | `app/database.py` |
 | Templates | `templates/*.html`, estende `base.html` |
-| CSS único, tema claro/moderno | `static/style.css` (variáveis em `:root`) |
+| CSS único, tema claro/moderno, responsivo | `static/style.css` (variáveis em `:root`; paleta azul/verde/branco/cinza — `--primary` azul, `--secondary` verde, `--bg`/`--surface`/`--border` cinza/branco; breakpoints `@media (max-width: 900px)` tablet e `(max-width: 560px)` celular no final do arquivo — **todo componente novo precisa caber nesses dois breakpoints**, não só desktop) |
 | Painel admin de consultas (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
 | Painel admin de usuários (promover operador/admin) + relatório de operadores | `app/routers/admin.py` (`/admin/usuarios`, `/admin/operadores`), `app/auth.py` (`listar_usuarios`, `alternar_operador`, `alternar_admin`) |
 | Fila de atendimento manual (consultas sem API) | `app/routers/operador.py`, `templates/operador.html`/`operador_atender.html` — restrito a `user.is_operador` ou `is_admin` |

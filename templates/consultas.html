@@ -10,7 +10,9 @@
 
 <div class="cards-grid">
   {% for tipo in tipos %}
+  {% set custo_atual = precos[tipo.id] if precos and tipo.id in precos else tipo.custo_creditos %}
   <div class="consulta-card {% if not tipo.disponivel %}consulta-card-disabled{% endif %}">
+    {% if custo_atual != tipo.custo_creditos %}<span class="card-ribbon">✦ preço especial</span>{% endif %}
     <div class="consulta-card-icon">{{ tipo.icone }}</div>
     <h3>{{ tipo.nome }}</h3>
     <p class="consulta-card-desc">{{ tipo.descricao }}</p>
@@ -21,17 +23,24 @@
       {% endfor %}
     </ul>
     {% endif %}
-    <div class="consulta-card-footer">
-      {% set custo_atual = precos[tipo.id] if precos and tipo.id in precos else tipo.custo_creditos %}
-      <span class="chip">{{ custo_atual }} crédito{{ 's' if custo_atual != 1 else '' }}</span>
-      {% if custo_atual != tipo.custo_creditos %}<span class="chip chip-ativo">preço especial</span>{% endif %}
+    <div class="consulta-card-actions">
       {% if tipo.disponivel %}
       <button type="button" class="btn-primary btn-sm" onclick='abrirModal("{{ tipo.id }}", {{ tipo.nome|tojson }}, {{ tipo.campo_label|tojson }}, {{ tipo.campo_placeholder|tojson }}, {{ tipo.lista_documentos_exigidos|tojson }})'>
         Consultar
       </button>
       {% else %}
-      <span class="chip chip-muted">Em breve</span>
+      <button type="button" class="btn-primary btn-sm" disabled>Em breve</button>
       {% endif %}
+    </div>
+    <div class="consulta-card-status">
+      <span class="status-tag">
+        <span class="status-dot {{ 'status-dot-ok' if tipo.disponivel else 'status-dot-off' }}"></span>
+        {{ "Disponível" if tipo.disponivel else "Indisponível" }}
+      </span>
+      <span class="consulta-card-price">
+        <span class="price-label">valor</span>
+        {{ custo_atual }} crédito{{ 's' if custo_atual != 1 else '' }}
+      </span>
     </div>
   </div>
   {% endfor %}
