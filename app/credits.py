@@ -174,6 +174,42 @@ def get_anexo(consulta_id: int) -> dict | None:
         return dict(row)
 
 
+def salvar_documento_consulta(
+    consulta_id: int,
+    nome_documento: str,
+    arquivo_nome: str,
+    arquivo_tipo: str | None,
+    arquivo_blob: bytes,
+    tamanho_original: int,
+) -> None:
+    with db_session() as conn:
+        conn.execute(
+            """
+            INSERT INTO consulta_documentos
+                (consulta_id, nome_documento, arquivo_nome, arquivo_tipo, arquivo_blob, tamanho_original)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (consulta_id, nome_documento, arquivo_nome, arquivo_tipo, arquivo_blob, tamanho_original),
+        )
+
+
+def listar_documentos_consulta(consulta_id: int) -> list[dict]:
+    with db_session() as conn:
+        rows = conn.execute(
+            "SELECT id, nome_documento, arquivo_nome, arquivo_tipo, tamanho_original FROM consulta_documentos WHERE consulta_id = ? ORDER BY id ASC",
+            (consulta_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def get_documento_consulta(doc_id: int) -> dict | None:
+    with db_session() as conn:
+        row = conn.execute(
+            "SELECT * FROM consulta_documentos WHERE id = ?", (doc_id,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
 def relatorio_operadores() -> list[dict]:
     with db_session() as conn:
         rows = conn.execute(

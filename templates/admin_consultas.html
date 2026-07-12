@@ -48,6 +48,10 @@
       Atendimento manual (não usa a API — vai para a fila do operador)
     </label>
 
+    <label>Documentos exigidos do cliente (separados por vírgula, máximo 5 — ex: RG, CPF, Comprovante de residência)</label>
+    <input type="text" name="documentos_exigidos" placeholder="RG, CPF, Comprovante de residência" value="{{ editar.documentos_exigidos if editar else '' }}">
+    <p class="field-hint">Ao preencher, o cliente será obrigado a enviar um arquivo para cada documento listado antes de confirmar a consulta, e o operador poderá baixar/imprimir os arquivos para executar o serviço.</p>
+
     <div class="admin-form-actions">
       <button type="submit" class="btn-primary btn-sm">{{ "Salvar alterações" if editar else "Criar consulta" }}</button>
       {% if editar %}<a href="/admin/consultas" class="btn-link">Cancelar</a>{% endif %}
@@ -65,6 +69,7 @@
     <div class="consulta-card-footer">
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
       {% if tipo.manual %}<span class="chip chip-muted">Manual</span>{% endif %}
+      {% if tipo.lista_documentos_exigidos %}<span class="chip chip-muted">📎 {{ tipo.lista_documentos_exigidos|length }} documento(s)</span>{% endif %}
       <span class="chip {% if tipo.disponivel %}chip-ativo{% else %}chip-muted{% endif %}">
         {{ "Ativo" if tipo.disponivel else "Inativo" }}
       </span>

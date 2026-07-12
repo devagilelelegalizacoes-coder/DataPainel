@@ -121,6 +121,32 @@ na mesma `consulta_detalhe.html` de sempre (branch por status, não template nov
   — um admin já acessa `/operador` por bypass, mas só aparece no relatório de
   `/admin/operadores` quem tem `is_operador=1` de verdade).
 
+## Documentos exigidos do cliente por tipo de consulta
+
+Além dos `campos_incluidos` (o que a consulta *traz*), o admin pode configurar
+`tipos_consulta.documentos_exigidos` (texto separado por vírgula, ex: `"RG, CPF, Comprovante de
+residência"`) — o que o cliente *precisa enviar* antes de confirmar a consulta. Limite de
+**5 documentos** (`MAX_DOCUMENTOS_EXIGIDOS` em `app/consulta_types.py`); `_limitar_documentos_exigidos()`
+corta silenciosamente qualquer item além do 5º ao salvar — não remover esse corte.
+
+- No modal de `/consultas` (`templates/consultas.html`), `abrirModal()` recebe
+  `tipo.lista_documentos_exigidos` (lista Jinja serializada com `|tojson`) e gera dinamicamente um
+  `<input type="file" name="documento_1">` … `documento_5` — um por documento exigido, na mesma
+  ordem da lista. **A ordem importa**: o back-end faz `zip(tipo.lista_documentos_exigidos,
+  [documento_1..5])` para casar nome do documento com arquivo enviado.
+- `consultas_submit()` em `app/routers/consultas.py` é `async` só por causa disso (precisa `await
+  arquivo.read()`). Valida que todos os documentos exigidos foram enviados **antes** de debitar
+  créditos — se faltar algum, nem debita nem chama a API. Isso vale tanto para consultas manuais
+  quanto automáticas (o requisito de documento não depende de `tipo.manual`).
+- Arquivos vão para a tabela `consulta_documentos` (não nas colunas `anexo_*` de `consultas`, que são
+  do *resultado* do operador) — comprimidos com gzip igual a todo outro anexo do projeto.
+  `listar_documentos_consulta()`/`salvar_documento_consulta()`/`get_documento_consulta()` em
+  `app/credits.py`.
+- Cliente baixa em `/consultas/historico/{id}/documentos/{doc_id}` (dono da consulta), operador baixa
+  em `/operador/{id}/documentos/{doc_id}` (só o operador dono do atendimento) — para imprimir antes
+  de executar o serviço. Mesma exibição em `consulta_detalhe.html` e `operador_atender.html`
+  (`documentos-lista`).
+
 ## Pré-cadastro e aprovação de clientes (agências/despachantes)
 
 Serviço é fechado: só agências de veículos e despachantes usam. `/registro` **não cria conta ativa**

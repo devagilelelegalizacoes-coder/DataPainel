@@ -9,6 +9,18 @@
 
 {% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
 
+{% if documentos %}
+<div class="detalhe-card">
+  <h3>Documentos enviados pelo cliente</h3>
+  <p class="muted" style="margin-top:0;">Baixe e imprima antes de executar o serviço.</p>
+  <ul class="documentos-lista">
+    {% for doc in documentos %}
+    <li><a href="/operador/{{ consulta.id }}/documentos/{{ doc.id }}" target="_blank" class="btn-link">📎 {{ doc.nome_documento }} — {{ doc.arquivo_nome }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 <div class="detalhe-card admin-form-card">
   <h3>Concluir atendimento</h3>
   <form method="post" action="/operador/{{ consulta.id }}/concluir" enctype="multipart/form-data">

@@ -15,6 +15,17 @@
   {% endif %}
 </div>
 
+{% if documentos %}
+<div class="detalhe-card" style="margin-bottom:16px;">
+  <h3>Documentos enviados</h3>
+  <ul class="documentos-lista">
+    {% for doc in documentos %}
+    <li><a href="/consultas/historico/{{ consulta.id }}/documentos/{{ doc.id }}" target="_blank">📎 {{ doc.nome_documento }} — {{ doc.arquivo_nome }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
 {% if consulta.status in ("pendente", "em_atendimento") %}
 <p class="alert alert-info">⏳ Sua consulta está {{ "aguardando um operador" if consulta.status == "pendente" else "sendo processada por um operador" }}. Assim que for concluída, o resultado aparece aqui automaticamente — sem custo adicional.</p>
 {% elif consulta.status == "erro" %}

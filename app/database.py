@@ -44,7 +44,20 @@ CREATE TABLE IF NOT EXISTS tipos_consulta (
     disponivel INTEGER NOT NULL DEFAULT 1,
     campos_incluidos TEXT NOT NULL DEFAULT '',
     manual INTEGER NOT NULL DEFAULT 0,
+    documentos_exigidos TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS consulta_documentos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    consulta_id INTEGER NOT NULL,
+    nome_documento TEXT NOT NULL,
+    arquivo_nome TEXT NOT NULL,
+    arquivo_tipo TEXT,
+    arquivo_blob BLOB NOT NULL,
+    tamanho_original INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (consulta_id) REFERENCES consultas (id)
 );
 
 CREATE TABLE IF NOT EXISTS pagamentos (
@@ -345,6 +358,7 @@ def init_db() -> None:
         _ensure_column(conn, "users", "motivo_rejeicao", "motivo_rejeicao TEXT")
         _ensure_column(conn, "tipos_consulta", "campos_incluidos", "campos_incluidos TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "tipos_consulta", "manual", "manual INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "tipos_consulta", "documentos_exigidos", "documentos_exigidos TEXT NOT NULL DEFAULT ''")
         _seed_tipos_consulta(conn)
         _ensure_configuracoes(conn)
         _ensure_seed_row(conn, "nacional")

@@ -80,6 +80,7 @@ def admin_consulta_criar(
     campo_placeholder: str = Form("Ex: ABC1234"),
     campos_incluidos: str = Form(""),
     manual: bool = Form(False),
+    documentos_exigidos: str = Form(""),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -111,6 +112,7 @@ def admin_consulta_criar(
         disponivel=False,
         campos_incluidos=campos_incluidos,
         manual=manual,
+        documentos_exigidos=documentos_exigidos,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -127,6 +129,7 @@ def admin_consulta_editar(
     campo_placeholder: str = Form("Ex: ABC1234"),
     campos_incluidos: str = Form(""),
     manual: bool = Form(False),
+    documentos_exigidos: str = Form(""),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -145,6 +148,7 @@ def admin_consulta_editar(
         campo_placeholder=campo_placeholder or "Ex: ABC1234",
         campos_incluidos=campos_incluidos,
         manual=manual,
+        documentos_exigidos=documentos_exigidos,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 

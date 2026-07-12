@@ -24,7 +24,7 @@
     <div class="consulta-card-footer">
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
       {% if tipo.disponivel %}
-      <button type="button" class="btn-primary btn-sm" onclick="abrirModal('{{ tipo.id }}', '{{ tipo.nome }}', '{{ tipo.campo_label }}', '{{ tipo.campo_placeholder }}')">
+      <button type="button" class="btn-primary btn-sm" onclick='abrirModal("{{ tipo.id }}", {{ tipo.nome|tojson }}, {{ tipo.campo_label|tojson }}, {{ tipo.campo_placeholder|tojson }}, {{ tipo.lista_documentos_exigidos|tojson }})'>
         Consultar
       </button>
       {% else %}
@@ -64,20 +64,36 @@
   <div class="modal-box">
     <button type="button" class="modal-close" onclick="fecharModal()">&times;</button>
     <h3 id="modal-titulo">Consultar</h3>
-    <form id="modal-form" method="post" action="">
+    <form id="modal-form" method="post" action="" enctype="multipart/form-data">
       <label id="modal-label" for="modal-input">Placa</label>
       <input id="modal-input" type="text" name="placa" required maxlength="8" style="text-transform:uppercase">
+      <div id="modal-documentos" class="documentos-upload-list"></div>
       <button type="submit" class="btn-primary">Confirmar consulta</button>
     </form>
   </div>
 </div>
 
 <script>
-  function abrirModal(tipoId, nome, label, placeholder) {
+  function abrirModal(tipoId, nome, label, placeholder, documentosExigidos) {
     document.getElementById("modal-titulo").textContent = nome;
     document.getElementById("modal-label").textContent = label;
     document.getElementById("modal-input").placeholder = placeholder;
     document.getElementById("modal-form").action = "/consultas/" + tipoId;
+
+    const container = document.getElementById("modal-documentos");
+    container.innerHTML = "";
+    documentosExigidos.forEach(function (nomeDocumento, indice) {
+      const label = document.createElement("label");
+      label.textContent = nomeDocumento;
+      const input = document.createElement("input");
+      input.type = "file";
+      input.name = "documento_" + (indice + 1);
+      input.accept = "image/*,.pdf";
+      input.required = true;
+      container.appendChild(label);
+      container.appendChild(input);
+    });
+
     document.getElementById("modal-overlay").classList.add("modal-open");
     document.getElementById("modal-input").focus();
   }

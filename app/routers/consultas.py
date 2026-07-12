@@ -2,20 +2,23 @@ import gzip
 import json
 from app.templates import templates
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.auth import get_current_user, get_user_by_id
 from app.consulta_formatter import montar_view
-from app.consulta_types import get_consulta_type, listar_consulta_types
+from app.consulta_types import MAX_DOCUMENTOS_EXIGIDOS, get_consulta_type, listar_consulta_types
 from app.credits import (
     SaldoInsuficienteError,
     debitar_creditos,
     estornar_creditos,
     get_anexo,
     get_consulta,
+    get_documento_consulta,
     listar_consultas,
+    listar_documentos_consulta,
     registrar_consulta,
+    salvar_documento_consulta,
 )
 from app.pdf_report import gerar_pdf_consulta
 from apibrasil.agregados_propria import AgregadosPropriaService
@@ -109,8 +112,37 @@ def consultas_page(request: Request):
     )
 
 
+TAMANHO_MAX_DOCUMENTO = 8 * 1024 * 1024  # 8MB antes de comprimir
+
+
+async def _salvar_documentos_consulta(consulta_id: int, tipo, arquivos: list) -> None:
+    for nome_documento, arquivo in zip(tipo.lista_documentos_exigidos, arquivos):
+        if arquivo is None or not arquivo.filename:
+            continue
+        conteudo = await arquivo.read()
+        if not conteudo or len(conteudo) > TAMANHO_MAX_DOCUMENTO:
+            continue
+        salvar_documento_consulta(
+            consulta_id=consulta_id,
+            nome_documento=nome_documento,
+            arquivo_nome=arquivo.filename,
+            arquivo_tipo=arquivo.content_type,
+            arquivo_blob=gzip.compress(conteudo, compresslevel=6),
+            tamanho_original=len(conteudo),
+        )
+
+
 @router.post("/consultas/{tipo_id}", response_class=HTMLResponse)
-def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
+async def consultas_submit(
+    request: Request,
+    tipo_id: str,
+    placa: str = Form(...),
+    documento_1: UploadFile | None = File(None),
+    documento_2: UploadFile | None = File(None),
+    documento_3: UploadFile | None = File(None),
+    documento_4: UploadFile | None = File(None),
+    documento_5: UploadFile | None = File(None),
+):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
@@ -119,6 +151,7 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
     if tipo is None:
         raise HTTPException(status_code=404, detail="Tipo de consulta não encontrado")
 
+    arquivos = [documento_1, documento_2, documento_3, documento_4, documento_5][:MAX_DOCUMENTOS_EXIGIDOS]
     placa = placa.strip().upper()
     custo = tipo.custo_creditos
     resultado = None
@@ -126,6 +159,11 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
 
     if not tipo.disponivel:
         erro = f"A consulta '{tipo.nome}' ainda não está disponível."
+    elif any(
+        arq is None or not arq.filename
+        for _, arq in zip(tipo.lista_documentos_exigidos, arquivos)
+    ):
+        erro = "Envie todos os documentos exigidos para esta consulta."
     else:
         try:
             debitar_creditos(user["id"], custo)
@@ -141,6 +179,7 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
                 status="pendente",
                 resultado_resumo="Aguardando atendimento de um operador",
             )
+            await _salvar_documentos_consulta(consulta_id, tipo, arquivos)
             return RedirectResponse(url=f"/consultas/historico/{consulta_id}", status_code=303)
 
         if erro is None:
@@ -155,6 +194,7 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
                     resultado_resumo=_resumo_veiculo(resultado),
                     resultado_json=json.dumps(resultado, ensure_ascii=False),
                 )
+                await _salvar_documentos_consulta(consulta_id, tipo, arquivos)
                 return RedirectResponse(url=f"/consultas/historico/{consulta_id}", status_code=303)
             except APIBrasilError as exc:
                 estornar_creditos(user["id"], custo)
@@ -197,6 +237,7 @@ def consulta_detalhe(request: Request, consulta_id: int):
     resultado = json.loads(consulta["resultado_json"]) if consulta["resultado_json"] else None
     view = montar_view(resultado)
     tipo = get_consulta_type(consulta["tipo"])
+    documentos = listar_documentos_consulta(consulta_id)
 
     return templates.TemplateResponse(
         request,
@@ -207,6 +248,7 @@ def consulta_detalhe(request: Request, consulta_id: int):
             "tipo": tipo,
             "campos_principais": view.campos_principais,
             "secoes": view.secoes,
+            "documentos": documentos,
         },
     )
 
@@ -254,4 +296,26 @@ def consulta_anexo(request: Request, consulta_id: int):
         content=conteudo,
         media_type=anexo["anexo_tipo"] or "application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{anexo["anexo_nome"]}"'},
+    )
+
+
+@router.get("/consultas/historico/{consulta_id}/documentos/{doc_id}")
+def consulta_documento_download(request: Request, consulta_id: int, doc_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    consulta = get_consulta(consulta_id, user["id"])
+    if consulta is None:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+
+    documento = get_documento_consulta(doc_id)
+    if documento is None or documento["consulta_id"] != consulta_id:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+
+    conteudo = gzip.decompress(documento["arquivo_blob"])
+    return Response(
+        content=conteudo,
+        media_type=documento["arquivo_tipo"] or "application/octet-stream",
+        headers={"Content-Disposition": f'inline; filename="{documento["arquivo_nome"]}"'},
     )

@@ -17,6 +17,8 @@ from app.credits import (
     concluir_consulta_manual,
     estornar_creditos,
     get_consulta_por_id,
+    get_documento_consulta,
+    listar_documentos_consulta,
     listar_em_atendimento,
     listar_pendentes_manuais,
     marcar_consulta_manual_erro,
@@ -141,10 +143,35 @@ def operador_atender_form(request: Request, consulta_id: int):
         raise HTTPException(status_code=403, detail="Este pedido não está atribuído a você")
 
     tipo = get_consulta_type(consulta["tipo"])
+    documentos = listar_documentos_consulta(consulta_id)
     return templates.TemplateResponse(
         request,
         "operador_atender.html",
-        {"user": user, "consulta": consulta, "tipo": tipo, "erro": None},
+        {"user": user, "consulta": consulta, "tipo": tipo, "documentos": documentos, "erro": None},
+    )
+
+
+@router.get("/operador/{consulta_id}/documentos/{doc_id}")
+def operador_documento_download(request: Request, consulta_id: int, doc_id: int):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    consulta = get_consulta_por_id(consulta_id)
+    if consulta is None:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+    if consulta["operador_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Este pedido não está atribuído a você")
+
+    documento = get_documento_consulta(doc_id)
+    if documento is None or documento["consulta_id"] != consulta_id:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+
+    conteudo = gzip.decompress(documento["arquivo_blob"])
+    return Response(
+        content=conteudo,
+        media_type=documento["arquivo_tipo"] or "application/octet-stream",
+        headers={"Content-Disposition": f'inline; filename="{documento["arquivo_nome"]}"'},
     )
 
 
