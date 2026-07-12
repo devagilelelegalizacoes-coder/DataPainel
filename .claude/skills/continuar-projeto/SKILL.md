@@ -185,6 +185,23 @@ Todo template usa `{{ get_config().nome_sistema }}` no `<title>` e na navbar, e
 própria instância `Jinja2Templates(directory="templates")`**, senão o global não existe e o template
 quebra com `UndefinedError`.
 
+## Cards visíveis por segmento (despachante x agência)
+
+Além do preço, o admin pode restringir **quais cards aparecem** para cada segmento profissional em
+`tipos_consulta.segmentos_visiveis` (texto separado por vírgula: `"despachante"`, `"agencia"` ou
+ambos). **Vazio = visível para todos** (comportamento padrão, não quebra cards já existentes).
+`ConsultaType.visivel_para(tipo_profissional)` faz a checagem — usar sempre esse método, não
+comparar `segmentos_visiveis` na mão.
+
+- `/consultas` (GET e o re-render de erro no POST) filtra `listar_consulta_types()` com
+  `t.visivel_para(user["tipo_profissional"])` **antes** de passar `tipos` pro template — o card nem
+  aparece pra quem não pode ver.
+- `consultas_submit()` faz a mesma checagem no servidor e responde `403` se o segmento não bate —
+  **necessário mesmo com o filtro na listagem**, porque o cliente pode montar o POST direto pra
+  `/consultas/{tipo_id}` sem passar pela tela (o formulário escondido não é proteção suficiente).
+- Formulário de admin usa checkboxes `name="segmentos"` (lista, `Form(list[str])`) — junta com
+  `",".join(segmentos)` antes de salvar. Editar um card e desmarcar os dois libera de novo pra todos.
+
 ## Preços diferenciados por segmento e por cliente
 
 `tipo.custo_creditos` é só o preço **padrão** do card. O preço real cobrado de um usuário vem de

@@ -100,7 +100,7 @@ def consultas_page(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     consultas = listar_consultas(user["id"], limit=20)
-    tipos = listar_consulta_types()
+    tipos = [t for t in listar_consulta_types() if t.visivel_para(user["tipo_profissional"])]
     return templates.TemplateResponse(
         request,
         "consultas.html",
@@ -162,6 +162,8 @@ async def consultas_submit(
 
     if not tipo.disponivel:
         erro = f"A consulta '{tipo.nome}' ainda não está disponível."
+    elif not tipo.visivel_para(user["tipo_profissional"]):
+        raise HTTPException(status_code=403, detail="Esta consulta não está disponível para o seu segmento")
     elif any(
         arq is None or not arq.filename
         for _, arq in zip(tipo.lista_documentos_exigidos, arquivos)
@@ -213,7 +215,7 @@ async def consultas_submit(
 
     user = get_user_by_id(user["id"])
     consultas = listar_consultas(user["id"], limit=20)
-    tipos = listar_consulta_types()
+    tipos = [t for t in listar_consulta_types() if t.visivel_para(user["tipo_profissional"])]
 
     return templates.TemplateResponse(
         request,

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS tipos_consulta (
     campos_incluidos TEXT NOT NULL DEFAULT '',
     manual INTEGER NOT NULL DEFAULT 0,
     documentos_exigidos TEXT NOT NULL DEFAULT '',
+    segmentos_visiveis TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -378,6 +379,7 @@ def init_db() -> None:
         _ensure_column(conn, "tipos_consulta", "campos_incluidos", "campos_incluidos TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "tipos_consulta", "manual", "manual INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "tipos_consulta", "documentos_exigidos", "documentos_exigidos TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "tipos_consulta", "segmentos_visiveis", "segmentos_visiveis TEXT NOT NULL DEFAULT ''")
         _seed_tipos_consulta(conn)
         _ensure_configuracoes(conn)
         _ensure_seed_row(conn, "nacional")

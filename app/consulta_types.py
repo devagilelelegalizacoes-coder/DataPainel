@@ -18,6 +18,7 @@ class ConsultaType:
     campos_incluidos: str = ""
     manual: bool = False
     documentos_exigidos: str = ""
+    segmentos_visiveis: str = ""
 
     @property
     def lista_campos_incluidos(self) -> list[str]:
@@ -27,6 +28,16 @@ class ConsultaType:
     def lista_documentos_exigidos(self) -> list[str]:
         itens = [d.strip() for d in self.documentos_exigidos.split(",") if d.strip()]
         return itens[:MAX_DOCUMENTOS_EXIGIDOS]
+
+    @property
+    def lista_segmentos_visiveis(self) -> list[str]:
+        return [s.strip() for s in self.segmentos_visiveis.split(",") if s.strip()]
+
+    def visivel_para(self, tipo_profissional: str | None) -> bool:
+        segmentos = self.lista_segmentos_visiveis
+        if not segmentos:
+            return True
+        return tipo_profissional in segmentos
 
 
 def _row_to_type(row) -> ConsultaType:
@@ -42,6 +53,7 @@ def _row_to_type(row) -> ConsultaType:
         campos_incluidos=row["campos_incluidos"] if "campos_incluidos" in row.keys() else "",
         manual=bool(row["manual"]) if "manual" in row.keys() else False,
         documentos_exigidos=row["documentos_exigidos"] if "documentos_exigidos" in row.keys() else "",
+        segmentos_visiveis=row["segmentos_visiveis"] if "segmentos_visiveis" in row.keys() else "",
     )
 
 
@@ -73,16 +85,17 @@ def criar_consulta_type(
     campos_incluidos: str = "",
     manual: bool = False,
     documentos_exigidos: str = "",
+    segmentos_visiveis: str = "",
 ) -> ConsultaType:
     documentos_exigidos = _limitar_documentos_exigidos(documentos_exigidos)
     with db_session() as conn:
         conn.execute(
             """
             INSERT INTO tipos_consulta
-                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos, manual, documentos_exigidos)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos, manual, documentos_exigidos, segmentos_visiveis)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos, int(manual), documentos_exigidos),
+            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis),
         )
     return get_consulta_type(id)
 
@@ -98,6 +111,7 @@ def atualizar_consulta_type(
     campos_incluidos: str = "",
     manual: bool = False,
     documentos_exigidos: str = "",
+    segmentos_visiveis: str = "",
 ) -> None:
     documentos_exigidos = _limitar_documentos_exigidos(documentos_exigidos)
     with db_session() as conn:
@@ -106,10 +120,10 @@ def atualizar_consulta_type(
             UPDATE tipos_consulta
             SET nome = ?, descricao = ?, icone = ?, custo_creditos = ?,
                 campo_label = ?, campo_placeholder = ?, campos_incluidos = ?, manual = ?,
-                documentos_exigidos = ?
+                documentos_exigidos = ?, segmentos_visiveis = ?
             WHERE id = ?
             """,
-            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, int(manual), documentos_exigidos, tipo_id),
+            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis, tipo_id),
         )
 
 

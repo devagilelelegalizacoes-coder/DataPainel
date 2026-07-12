@@ -89,6 +89,7 @@ def admin_consulta_criar(
     campos_incluidos: str = Form(""),
     manual: bool = Form(False),
     documentos_exigidos: str = Form(""),
+    segmentos: list[str] = Form([]),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -121,6 +122,7 @@ def admin_consulta_criar(
         campos_incluidos=campos_incluidos,
         manual=manual,
         documentos_exigidos=documentos_exigidos,
+        segmentos_visiveis=",".join(segmentos),
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -138,6 +140,7 @@ def admin_consulta_editar(
     campos_incluidos: str = Form(""),
     manual: bool = Form(False),
     documentos_exigidos: str = Form(""),
+    segmentos: list[str] = Form([]),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -157,6 +160,7 @@ def admin_consulta_editar(
         campos_incluidos=campos_incluidos,
         manual=manual,
         documentos_exigidos=documentos_exigidos,
+        segmentos_visiveis=",".join(segmentos),
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 

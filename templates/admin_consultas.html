@@ -52,6 +52,17 @@
     <input type="text" name="documentos_exigidos" placeholder="RG, CPF, Comprovante de residência" value="{{ editar.documentos_exigidos if editar else '' }}">
     <p class="field-hint">Ao preencher, o cliente será obrigado a enviar um arquivo para cada documento listado antes de confirmar a consulta, e o operador poderá baixar/imprimir os arquivos para executar o serviço.</p>
 
+    <label>Visível para quais segmentos?</label>
+    <label class="admin-checkbox">
+      <input type="checkbox" name="segmentos" value="despachante" {% if editar and "despachante" in editar.lista_segmentos_visiveis %}checked{% endif %}>
+      Despachante
+    </label>
+    <label class="admin-checkbox">
+      <input type="checkbox" name="segmentos" value="agencia" {% if editar and "agencia" in editar.lista_segmentos_visiveis %}checked{% endif %}>
+      Agência de veículos
+    </label>
+    <p class="field-hint">Se nenhum for marcado, o card fica visível para todos. Se marcar um ou ambos, só os segmentos marcados veem esse card em /consultas.</p>
+
     <div class="admin-form-actions">
       <button type="submit" class="btn-primary btn-sm">{{ "Salvar alterações" if editar else "Criar consulta" }}</button>
       {% if editar %}<a href="/admin/consultas" class="btn-link">Cancelar</a>{% endif %}
@@ -70,6 +81,7 @@
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
       {% if tipo.manual %}<span class="chip chip-muted">Manual</span>{% endif %}
       {% if tipo.lista_documentos_exigidos %}<span class="chip chip-muted">📎 {{ tipo.lista_documentos_exigidos|length }} documento(s)</span>{% endif %}
+      {% if tipo.lista_segmentos_visiveis %}<span class="chip chip-muted">👁 {{ tipo.lista_segmentos_visiveis|join(', ')|replace('despachante', 'Despachante')|replace('agencia', 'Agência') }}</span>{% endif %}
       <span class="chip {% if tipo.disponivel %}chip-ativo{% else %}chip-muted{% endif %}">
         {{ "Ativo" if tipo.disponivel else "Inativo" }}
       </span>
