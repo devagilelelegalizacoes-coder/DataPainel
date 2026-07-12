@@ -37,7 +37,9 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Schema SQLite + seeds/migrações de `tipos_consulta` | `app/database.py` |
 | Templates | `templates/*.html`, estende `base.html` |
 | CSS único, tema claro/moderno | `static/style.css` (variáveis em `:root`) |
-| Painel admin (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
+| Painel admin de consultas (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
+| Painel admin de usuários (promover operador/admin) + relatório de operadores | `app/routers/admin.py` (`/admin/usuarios`, `/admin/operadores`), `app/auth.py` (`listar_usuarios`, `alternar_operador`, `alternar_admin`) |
+| Fila de atendimento manual (consultas sem API) | `app/routers/operador.py`, `templates/operador.html`/`operador_atender.html` — restrito a `user.is_operador` ou `is_admin` |
 | Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
 | Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
 
@@ -85,6 +87,35 @@ sem criar template ou lógica de exibição nova:
 - Vários endpoints (`analitico-veicular`, `relatorio-veicular`) retornam `content` (JSON aninhado) +
   `pdf` (link do relatório hospedado pela própria APIBrasil) em vez de campos estruturados soltos —
   isso é normal e o formatador genérico já lida bem.
+
+## Consultas manuais (sem API — atendidas por operador humano)
+
+Nem toda consulta tem endpoint na APIBrasil (ex: "Score Veicular"). Para essas, o card em
+`tipos_consulta` tem `manual=1` — nesse caso `consultas_submit()` **não chama nenhum service**, só
+debita os créditos e grava a consulta com `status="pendente"`. O cliente vê "aguardando um operador"
+na mesma `consulta_detalhe.html` de sempre (branch por status, não template novo).
+
+- Fila em `/operador`: lista pedidos `status='pendente' AND operador_id IS NULL`. "Puxar" é um
+  `UPDATE ... WHERE status='pendente' AND operador_id IS NULL` com checagem de `rowcount == 1`
+  (`reivindicar_consulta()` em `app/credits.py`) — é assim que se evita dois operadores pegando o
+  mesmo pedido; não trocar por um `SELECT` seguido de `UPDATE` separado (condição de corrida).
+- Aviso sonoro é só Web Audio API (`OscillatorNode` gerado em JS, sem arquivo de áudio) + polling a
+  cada 6s em `/operador/api/pendentes-ids` comparando IDs conhecidos — não precisa de
+  websocket/SSE pra esse volume.
+- Conclusão aceita observação em texto e/ou upload de arquivo. **Arquivo é comprimido com
+  `gzip.compress()` antes de virar BLOB no SQLite** (colunas `anexo_blob`/`anexo_nome`/`anexo_tipo`/
+  `anexo_tamanho_original` em `consultas`) e descomprimido só na hora do download
+  (`/consultas/historico/{id}/anexo`) — manter essa compressão em qualquer novo tipo de anexo, é o
+  que evita o banco inchar.
+- Resultado do atendimento manual vira `resultado_json = {"data": {...}}` como qualquer outro tipo
+  (`observacao_operador`, `documento_anexado`), então cai automaticamente no formatador/PDF genérico
+  sem código extra.
+- Se o operador não conseguir atender, `marcar_consulta_manual_erro()` **estorna os créditos do
+  cliente automaticamente** (mesma regra do fluxo automático) — nunca deixar o cliente pagar por um
+  pedido não atendido.
+- Promover usuário a operador é em `/admin/usuarios` (`is_operador`, coluna separada de `is_admin`
+  — um admin já acessa `/operador` por bypass, mas só aparece no relatório de
+  `/admin/operadores` quem tem `is_operador=1` de verdade).
 
 ## Sistema de créditos (não mudar o fluxo)
 
