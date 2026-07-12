@@ -28,16 +28,15 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 |---|---|
 | Integração HTTP com a APIBrasil (por endpoint) | `apibrasil/<nome>.py` |
 | Config/erros compartilhados da API | `apibrasil/base_nacional_v2.py` (`APIBrasilConfig`, `APIBrasilError`, `APIBrasilTimeoutError`) — reaproveitar, não duplicar |
-| Registro dos tipos de consulta (cards) | `app/consulta_types.py` |
+| Registro dos tipos de consulta (**SQLite**, não dict fixo) | `app/consulta_types.py` (tabela `tipos_consulta`: nome, descrição, ícone, custo, `disponivel`, `campos_incluidos`) |
 | Dispatcher que decide qual service chamar | `_executar_consulta()` em `app/routers/consultas.py` |
 | Créditos (débito/estorno/histórico) | `app/credits.py` |
 | Auth (bcrypt direto, **não passlib** — tem bug de compat com bcrypt 5.x) | `app/auth.py` |
 | Formatação genérica de resultado (detalhe + PDF) | `app/consulta_formatter.py` |
 | Geração de PDF | `app/pdf_report.py` |
-| Schema SQLite | `app/database.py` |
+| Schema SQLite + seeds/migrações de `tipos_consulta` | `app/database.py` |
 | Templates | `templates/*.html`, estende `base.html` |
 | CSS único, tema claro/moderno | `static/style.css` (variáveis em `:root`) |
-| Registro dos tipos de consulta (**agora em SQLite**, não dict fixo) | `app/consulta_types.py` (tabela `tipos_consulta`) |
 | Painel admin (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
 | Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
 | Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
@@ -50,15 +49,42 @@ sem criar template ou lógica de exibição nova:
 1. Criar `apibrasil/<nome_do_endpoint>.py` com uma classe `<Nome>Service`, reaproveitando
    `APIBrasilConfig`/`APIBrasilError`/`APIBrasilTimeoutError` de `apibrasil/base_nacional_v2.py`
    (não recriar essas classes). Seguir a mesma estrutura de `AgregadosPropriaService` como referência.
-2. Registrar o card em `app/consulta_types.py` (`ConsultaType`: id, nome, descrição, ícone, custo em
-   créditos, `disponivel=True`).
-3. Adicionar um `if tipo_id == "...":` em `_executar_consulta()` (`app/routers/consultas.py`)
+   Se o payload tiver campos aninhados (`extra`, `whitelabel`, `agrupados`...), tipar com
+   `TypedDict(..., total=False)` na forma funcional quando as chaves do JSON tiverem hífen
+   (`"proprietario-atual"` não é identificador Python válido).
+2. **Testar primeiro em homolog** (`homolog=True`) antes de assumir o formato da resposta — o shape
+   varia bastante entre endpoints (ver "Pegadinhas de resposta" abaixo) e só dá pra saber rodando de
+   verdade.
+3. Registrar o card em `app/database.py`: adicionar a entrada em `SEED_TIPOS_CONSULTA` (novas
+   instalações) **e** uma chamada `_ensure_seed_row(conn, "<tipo_id>")` em `init_db()` (bancos já
+   existentes) — sem isso o card não aparece pra quem já rodou o projeto antes. Preencher também
+   `CAMPOS_INCLUIDOS["<tipo_id>"]` com um resumo em texto (uma linha por item, `\n` separado) do que a
+   resposta real traz — isso vira a checklist visível no card em `/consultas`, então **precisa ser
+   escrito depois do teste em homolog**, não antes (não adivinhar campos).
+4. Adicionar um `if tipo_id == "...":` em `_executar_consulta()` (`app/routers/consultas.py`)
    chamando o novo service.
-4. **Não criar template de detalhe nem lógica de PDF nova.** A página de detalhe
+5. **Não criar template de detalhe nem lógica de PDF nova.** A página de detalhe
    (`templates/consulta_detalhe.html`) e o PDF (`app/pdf_report.py`) são genéricos — funcionam para
-   qualquer JSON de resposta via `montar_view()` em `app/consulta_formatter.py`. Isso é padrão do
-   projeto, confirmado explicitamente pelo usuário: **"todas as consultas precisa de uma página para
-   mostrar a consulta, isso é padrão para o projeto"**.
+   qualquer JSON de resposta via `montar_view()` em `app/consulta_formatter.py` (recursivo, qualquer
+   profundidade de aninhamento). Isso é padrão do projeto, confirmado explicitamente pelo usuário:
+   **"todas as consultas precisa de uma página para mostrar a consulta, isso é padrão para o
+   projeto"**.
+
+### Pegadinhas de resposta já encontradas (conferir em todo endpoint novo)
+
+- **Chave dos dados nem sempre é `"data"`.** O endpoint `veicular-agrupados` devolve os resultados
+  numa chave literal com o nome do `tipo` (`body["veicular-agrupados"]`), não em `"data"`. Sem
+  normalizar isso dentro do próprio service (`_handle_response` promovendo a chave certa para
+  `"data"`), o formatador genérico cai no fallback e **vaza campos internos da resposta** (saldo,
+  e-mail da conta) na tela e no PDF do cliente. Sempre conferir `list(resultado.keys())` no teste em
+  homolog antes de dar como pronto.
+- **`whitelabel` às vezes é obrigatório mesmo "opcional" na doc.** `analitico-veicular` e
+  `relatorio-veicular` retornam `400 "whitelabel deve ser objeto"` se o campo vier ausente ou `{}`.
+  Sempre mandar um `DEFAULT_WHITELABEL` preenchido (empresa, cores, etc.) quando o caller não
+  especificar um customizado — ver `apibrasil/analitico_veicular.py` como referência.
+- Vários endpoints (`analitico-veicular`, `relatorio-veicular`) retornam `content` (JSON aninhado) +
+  `pdf` (link do relatório hospedado pela própria APIBrasil) em vez de campos estruturados soltos —
+  isso é normal e o formatador genérico já lida bem.
 
 ## Sistema de créditos (não mudar o fluxo)
 
