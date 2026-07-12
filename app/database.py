@@ -13,7 +13,24 @@ CREATE TABLE IF NOT EXISTS users (
     credits INTEGER NOT NULL DEFAULT 0,
     is_admin INTEGER NOT NULL DEFAULT 0,
     is_operador INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'aprovado',
+    tipo_profissional TEXT,
+    cnpj_ou_carteirinha TEXT,
+    documento_blob BLOB,
+    documento_nome TEXT,
+    documento_tipo TEXT,
+    aceite_termos_em TEXT,
+    motivo_rejeicao TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS configuracoes_sistema (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    nome_sistema TEXT NOT NULL DEFAULT 'DataPainel',
+    logo_login_blob BLOB,
+    logo_login_tipo TEXT,
+    favicon_blob BLOB,
+    favicon_tipo TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tipos_consulta (
@@ -291,7 +308,17 @@ def _ensure_admin_exists(conn: sqlite3.Connection) -> None:
         return
     primeiro = conn.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1").fetchone()
     if primeiro:
-        conn.execute("UPDATE users SET is_admin = 1 WHERE id = ?", (primeiro["id"],))
+        conn.execute(
+            "UPDATE users SET is_admin = 1, status = 'aprovado' WHERE id = ?", (primeiro["id"],)
+        )
+
+
+def _ensure_configuracoes(conn: sqlite3.Connection) -> None:
+    existe = conn.execute("SELECT 1 FROM configuracoes_sistema WHERE id = 1").fetchone()
+    if not existe:
+        conn.execute(
+            "INSERT INTO configuracoes_sistema (id, nome_sistema) VALUES (1, 'DataPainel')"
+        )
 
 
 def init_db() -> None:
@@ -308,9 +335,18 @@ def init_db() -> None:
         _ensure_column(conn, "consultas", "anexo_tamanho_original", "anexo_tamanho_original INTEGER")
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "users", "is_operador", "is_operador INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "users", "status", "status TEXT NOT NULL DEFAULT 'aprovado'")
+        _ensure_column(conn, "users", "tipo_profissional", "tipo_profissional TEXT")
+        _ensure_column(conn, "users", "cnpj_ou_carteirinha", "cnpj_ou_carteirinha TEXT")
+        _ensure_column(conn, "users", "documento_blob", "documento_blob BLOB")
+        _ensure_column(conn, "users", "documento_nome", "documento_nome TEXT")
+        _ensure_column(conn, "users", "documento_tipo", "documento_tipo TEXT")
+        _ensure_column(conn, "users", "aceite_termos_em", "aceite_termos_em TEXT")
+        _ensure_column(conn, "users", "motivo_rejeicao", "motivo_rejeicao TEXT")
         _ensure_column(conn, "tipos_consulta", "campos_incluidos", "campos_incluidos TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "tipos_consulta", "manual", "manual INTEGER NOT NULL DEFAULT 0")
         _seed_tipos_consulta(conn)
+        _ensure_configuracoes(conn)
         _ensure_seed_row(conn, "nacional")
         _ensure_seed_row(conn, "estadual")
         _ensure_seed_row(conn, "gravame")

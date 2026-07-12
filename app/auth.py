@@ -36,12 +36,90 @@ def create_user(name: str, email: str, password: str, initial_credits: int = 10)
     with db_session() as conn:
         total_usuarios = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
         is_admin = 1 if total_usuarios == 0 else 0
+        status = "aprovado" if is_admin else "pendente"
         cursor = conn.execute(
-            "INSERT INTO users (name, email, password_hash, credits, is_admin) VALUES (?, ?, ?, ?, ?)",
-            (name, email, hash_password(password), initial_credits, is_admin),
+            "INSERT INTO users (name, email, password_hash, credits, is_admin, status) VALUES (?, ?, ?, ?, ?, ?)",
+            (name, email, hash_password(password), initial_credits, is_admin, status),
         )
         user_id = cursor.lastrowid
         row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return dict(row)
+
+
+def criar_pre_cadastro(
+    name: str,
+    email: str,
+    password: str,
+    tipo_profissional: str,
+    cnpj_ou_carteirinha: str,
+    documento_blob: bytes,
+    documento_nome: str,
+    documento_tipo: str,
+    aceite_termos_em: str,
+) -> dict:
+    """Cria conta de cliente (agência/despachante) pendente de aprovação por operador/admin."""
+    with db_session() as conn:
+        total_usuarios = conn.execute("SELECT COUNT(*) AS n FROM users").fetchone()["n"]
+        is_admin = 1 if total_usuarios == 0 else 0
+        status = "aprovado" if is_admin else "pendente"
+        cursor = conn.execute(
+            """
+            INSERT INTO users
+                (name, email, password_hash, credits, is_admin, status, tipo_profissional,
+                 cnpj_ou_carteirinha, documento_blob, documento_nome, documento_tipo, aceite_termos_em)
+            VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                name,
+                email,
+                hash_password(password),
+                is_admin,
+                status,
+                tipo_profissional,
+                cnpj_ou_carteirinha,
+                documento_blob,
+                documento_nome,
+                documento_tipo,
+                aceite_termos_em,
+            ),
+        )
+        user_id = cursor.lastrowid
+        row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return dict(row)
+
+
+def listar_cadastros_pendentes() -> list[dict]:
+    with db_session() as conn:
+        rows = conn.execute(
+            "SELECT * FROM users WHERE status = 'pendente' ORDER BY created_at ASC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def aprovar_cadastro(user_id: int, creditos_iniciais: int = 10) -> None:
+    with db_session() as conn:
+        conn.execute(
+            "UPDATE users SET status = 'aprovado', credits = credits + ?, motivo_rejeicao = NULL WHERE id = ?",
+            (creditos_iniciais, user_id),
+        )
+
+
+def rejeitar_cadastro(user_id: int, motivo: str) -> None:
+    with db_session() as conn:
+        conn.execute(
+            "UPDATE users SET status = 'rejeitado', motivo_rejeicao = ? WHERE id = ?",
+            (motivo, user_id),
+        )
+
+
+def get_documento_cadastro(user_id: int) -> Optional[dict]:
+    with db_session() as conn:
+        row = conn.execute(
+            "SELECT documento_blob, documento_nome, documento_tipo FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        if not row or not row["documento_blob"]:
+            return None
         return dict(row)
 
 

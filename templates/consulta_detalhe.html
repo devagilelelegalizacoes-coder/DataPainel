@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Consulta #{{ consulta.id }} - APIBrasil{% endblock %}
+{% block title %}Consulta #{{ consulta.id }} - {{ get_config().nome_sistema }}{% endblock %}
 {% block content %}
 <div class="page-header detalhe-header">
   <div>

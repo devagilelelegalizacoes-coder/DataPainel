@@ -1,9 +1,9 @@
 import gzip
 import json
+from app.templates import templates
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.templating import Jinja2Templates
 
 from app.auth import get_current_user, get_user_by_id
 from app.consulta_formatter import montar_view
@@ -34,7 +34,6 @@ from apibrasil.veicular_agrupados import VeicularAgrupadosService
 from apibrasil.veicular_relatorio import VeicularRelatorioService
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def _resumo_veiculo(resultado: dict) -> str:

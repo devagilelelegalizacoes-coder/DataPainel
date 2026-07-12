@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from app.templates import templates
 
 from app.auth import alternar_admin, alternar_operador, get_current_user, listar_usuarios
+from app.config_sistema import atualizar_favicon, atualizar_logo_login, atualizar_nome_sistema, get_configuracoes
 from app.consulta_types import (
     alternar_disponibilidade,
     atualizar_consulta_type,
@@ -13,8 +14,9 @@ from app.consulta_types import (
 )
 from app.credits import relatorio_operadores
 
+TAMANHO_MAX_LOGO = 2 * 1024 * 1024  # 2MB
+
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 def _slugify(texto: str) -> str:
@@ -222,3 +224,49 @@ def admin_operadores_page(request: Request):
         "admin_operadores.html",
         {"user": user, "relatorio": relatorio},
     )
+
+
+@router.get("/admin/config", response_class=HTMLResponse)
+def admin_config_page(request: Request, erro: str | None = None, sucesso: str | None = None):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    return templates.TemplateResponse(
+        request,
+        "admin_config.html",
+        {"user": user, "config": get_configuracoes(), "erro": erro, "sucesso": sucesso},
+    )
+
+
+@router.post("/admin/config")
+async def admin_config_salvar(
+    request: Request,
+    nome_sistema: str = Form(...),
+    logo_login: UploadFile | None = File(None),
+    favicon: UploadFile | None = File(None),
+):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    if nome_sistema.strip():
+        atualizar_nome_sistema(nome_sistema.strip())
+
+    if logo_login is not None and logo_login.filename:
+        conteudo = await logo_login.read()
+        if len(conteudo) > TAMANHO_MAX_LOGO:
+            return RedirectResponse(
+                url="/admin/config?erro=Logo+muito+grande+(m%C3%A1ximo+2MB)", status_code=303
+            )
+        atualizar_logo_login(conteudo, logo_login.content_type or "image/png")
+
+    if favicon is not None and favicon.filename:
+        conteudo = await favicon.read()
+        if len(conteudo) > TAMANHO_MAX_LOGO:
+            return RedirectResponse(
+                url="/admin/config?erro=Favicon+muito+grande+(m%C3%A1ximo+2MB)", status_code=303
+            )
+        atualizar_favicon(conteudo, favicon.content_type or "image/png")
+
+    return RedirectResponse(url="/admin/config?sucesso=Personaliza%C3%A7%C3%A3o+atualizada", status_code=303)

@@ -40,6 +40,10 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Painel admin de consultas (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
 | Painel admin de usuários (promover operador/admin) + relatório de operadores | `app/routers/admin.py` (`/admin/usuarios`, `/admin/operadores`), `app/auth.py` (`listar_usuarios`, `alternar_operador`, `alternar_admin`) |
 | Fila de atendimento manual (consultas sem API) | `app/routers/operador.py`, `templates/operador.html`/`operador_atender.html` — restrito a `user.is_operador` ou `is_admin` |
+| Pré-cadastro e aprovação de clientes | `app/auth.py` (`criar_pre_cadastro`, `aprovar_cadastro`, `rejeitar_cadastro`), `app/routers/auth.py` (`/registro`), `app/routers/operador.py` (`/operador/cadastros`) |
+| Personalização (nome do sistema, logo login, favicon) | `app/config_sistema.py`, `app/routers/admin.py` (`/admin/config`), `templates/admin_config.html` |
+| Templates Jinja2 compartilhados (registra `get_config()` como global) | `app/templates.py` — **todo router importa `templates` daqui, nunca instancia `Jinja2Templates` de novo** |
+| Páginas legais estáticas | `templates/termos.html`, `templates/privacidade.html`, rotas em `app/routers/auth.py` |
 | Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
 | Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
 
@@ -116,6 +120,43 @@ na mesma `consulta_detalhe.html` de sempre (branch por status, não template nov
 - Promover usuário a operador é em `/admin/usuarios` (`is_operador`, coluna separada de `is_admin`
   — um admin já acessa `/operador` por bypass, mas só aparece no relatório de
   `/admin/operadores` quem tem `is_operador=1` de verdade).
+
+## Pré-cadastro e aprovação de clientes (agências/despachantes)
+
+Serviço é fechado: só agências de veículos e despachantes usam. `/registro` **não cria conta ativa**
+— cria um usuário com `status='pendente'`, 0 créditos, exige `tipo_profissional`
+(despachante/agência), `cnpj_ou_carteirinha` e upload de um documento comprobatório (gzip-compresso
+igual ao anexo de consulta manual, mesma lógica de `TAMANHO_MAX_*` + decompressão sob demanda). O
+usuário só consegue logar depois que um operador ou admin aprova (`aprovar_cadastro()` credita 10
+créditos iniciais e muda status para `'aprovado'`) em `/operador/cadastros`. `login_submit()` checa
+`user["status"]` e bloqueia com mensagem específica se `pendente` ou `rejeitado` (`motivo_rejeicao`
+é exibido). **Exceção**: o primeiro usuário do sistema (bootstrap) sempre nasce `is_admin=1` e
+`status='aprovado'`, senão ninguém consegue logar para aprovar os demais — não remover esse caso
+especial em `criar_pre_cadastro()`/`create_user()`.
+
+Aceite de termos é obrigatório no cadastro (`aceite_termos` checkbox, salvo como timestamp em
+`aceite_termos_em`) — página não deixa passar sem marcar. `/termos` e `/privacidade` são páginas
+estáticas públicas (sem exigir login), linkadas no rodapé de `base.html` e no formulário de
+registro.
+
+**Cuidado com ordem de rotas**: `/operador/cadastros` e as sub-rotas precisam estar declaradas
+**antes** de `/operador/{consulta_id}` em `app/routers/operador.py`, senão o FastAPI casa
+`"cadastros"` como `consulta_id` e quebra com 422 — já aconteceu uma vez, não mover as rotas
+estáticas para depois das rotas com path param.
+
+## Personalização (nome do sistema, logo, favicon)
+
+Nome do sistema, logo da tela de login e favicon ficam em `configuracoes_sistema` (linha única,
+`id=1`), editáveis pelo admin em `/admin/config`. Imagens são gzip-comprimidas antes de virar BLOB
+(mesmo padrão dos anexos) e servidas via `/config/logo-login` e `/config/favicon` (rotas **públicas**,
+sem autenticação — precisam carregar antes do login).
+
+Todo template usa `{{ get_config().nome_sistema }}` no `<title>` e na navbar, e
+`{% if get_config().tem_favicon %}` para o `<link rel="icon">`. Isso só funciona porque
+`app/templates.py` registra `get_config` como global do Jinja (`templates.env.globals["get_config"]
+= get_configuracoes`) — **todo router deve importar `templates` de `app.templates`, nunca criar sua
+própria instância `Jinja2Templates(directory="templates")`**, senão o global não existe e o template
+quebra com `UndefinedError`.
 
 ## Sistema de créditos (não mudar o fluxo)
 

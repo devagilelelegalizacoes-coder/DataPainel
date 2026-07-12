@@ -1,11 +1,17 @@
 import gzip
 import json
+from app.templates import templates
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 
-from app.auth import get_current_user
+from app.auth import (
+    aprovar_cadastro,
+    get_current_user,
+    get_documento_cadastro,
+    listar_cadastros_pendentes,
+    rejeitar_cadastro,
+)
 from app.consulta_types import get_consulta_type
 from app.credits import (
     concluir_consulta_manual,
@@ -18,7 +24,6 @@ from app.credits import (
 )
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 TAMANHO_MAX_ANEXO = 8 * 1024 * 1024  # 8MB antes de comprimir
 
@@ -55,6 +60,58 @@ def operador_pendentes_ids(request: Request):
 
     ids = [p["id"] for p in listar_pendentes_manuais()]
     return JSONResponse({"ids": ids})
+
+
+@router.get("/operador/cadastros", response_class=HTMLResponse)
+def operador_cadastros(request: Request, erro: str | None = None):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    pendentes = listar_cadastros_pendentes()
+    return templates.TemplateResponse(
+        request,
+        "operador_cadastros.html",
+        {"user": user, "pendentes": pendentes, "erro": erro},
+    )
+
+
+@router.get("/operador/cadastros/{user_id}/documento")
+def operador_cadastro_documento(request: Request, user_id: int):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    documento = get_documento_cadastro(user_id)
+    if documento is None:
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+
+    conteudo = gzip.decompress(documento["documento_blob"])
+    return Response(
+        content=conteudo,
+        media_type=documento["documento_tipo"] or "application/octet-stream",
+        headers={"Content-Disposition": f'inline; filename="{documento["documento_nome"]}"'},
+    )
+
+
+@router.post("/operador/cadastros/{user_id}/aprovar")
+def operador_cadastro_aprovar(request: Request, user_id: int):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    aprovar_cadastro(user_id)
+    return RedirectResponse(url="/operador/cadastros", status_code=303)
+
+
+@router.post("/operador/cadastros/{user_id}/rejeitar")
+def operador_cadastro_rejeitar(request: Request, user_id: int, motivo: str = Form(...)):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    rejeitar_cadastro(user_id, motivo)
+    return RedirectResponse(url="/operador/cadastros", status_code=303)
 
 
 @router.post("/operador/{consulta_id}/puxar")

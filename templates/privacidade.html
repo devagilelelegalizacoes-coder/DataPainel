@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidade - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="legal-page">
+  <h1>Política de Privacidade</h1>
+  <p>Última atualização: {{ hoje }}</p>
+
+  <h2>1. Dados coletados</h2>
+  <ul>
+    <li>Dados de cadastro: nome, e-mail, senha (armazenada de forma criptografada), tipo de
+    profissional, CNPJ ou nº de carteirinha de despachante e o documento comprobatório enviado.</li>
+    <li>Dados de uso: histórico de consultas realizadas, placas consultadas, créditos utilizados e
+    resultados retornados.</li>
+    <li>Dados de pagamento: registros de compra de créditos (processados pelo Mercado Pago; não
+    armazenamos dados de cartão).</li>
+  </ul>
+
+  <h2>2. Finalidade</h2>
+  <p>Os dados são usados para: validar e aprovar o cadastro do usuário, viabilizar a execução das
+  consultas solicitadas, manter histórico para consulta posterior pelo próprio usuário e cumprir
+  obrigações legais.</p>
+
+  <h2>3. Armazenamento e segurança</h2>
+  <p>Os dados são armazenados em banco próprio, com senha protegida por hash e documentos
+  comprimidos antes do armazenamento. O acesso a documentos de cadastro e anexos de consulta é
+  restrito a operadores e administradores autorizados.</p>
+
+  <h2>4. Compartilhamento</h2>
+  <p>Os dados de identificação do veículo consultado são enviados aos provedores de dados
+  veiculares (APIBrasil e bases parceiras) apenas para a execução da consulta solicitada. Não
+  compartilhamos dados de cadastro do usuário com terceiros para fins comerciais.</p>
+
+  <h2>5. Direitos do titular</h2>
+  <p>O usuário pode, a qualquer momento, solicitar a atualização ou exclusão de seus dados de
+  cadastro entrando em contato com a administração do sistema.</p>
+
+  <h2>6. Contato</h2>
+  <p>Dúvidas sobre esta política podem ser enviadas ao administrador da conta responsável pela
+  contratação do serviço.</p>
+</div>
+{% endblock %}

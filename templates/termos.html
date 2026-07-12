@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Termos de Responsabilidade - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="legal-page">
+  <h1>Termos de Responsabilidade</h1>
+  <p>Última atualização: {{ hoje }}</p>
+
+  <h2>1. Natureza do serviço</h2>
+  <p>{{ get_config().nome_sistema }} é uma plataforma de intermediação de consultas veiculares,
+  disponibilizada exclusivamente a despachantes e agências de veículos previamente cadastrados e
+  aprovados. Os dados retornados nas consultas são obtidos junto a bases de terceiros (órgãos de
+  trânsito, DETRANs, provedores de dados veiculares) e são repassados ao usuário como recebidos,
+  sem alteração de conteúdo.</p>
+
+  <h2>2. Responsabilidade pelo uso dos dados</h2>
+  <p>O usuário declara que utilizará as informações obtidas exclusivamente para finalidade lícita,
+  relacionada à sua atividade profissional de despachante ou agência de veículos, sendo o único
+  responsável por qualquer uso indevido, divulgação não autorizada ou finalidade diversa da
+  declarada no momento do cadastro.</p>
+
+  <h2>3. Veracidade das informações de cadastro</h2>
+  <p>O usuário é responsável pela veracidade dos dados e documentos (CNPJ, carteirinha de
+  despachante) enviados no cadastro. O fornecimento de informação falsa pode resultar em
+  suspensão imediata do acesso, sem direito a reembolso dos créditos já utilizados.</p>
+
+  <h2>4. Créditos e cobrança</h2>
+  <p>Cada consulta realizada debita créditos da conta do usuário no momento da solicitação. Em
+  caso de falha na consulta (erro da fonte de dados ou impossibilidade de atendimento), os
+  créditos são automaticamente estornados.</p>
+
+  <h2>5. Isenção de responsabilidade</h2>
+  <p>{{ get_config().nome_sistema }} não se responsabiliza por decisões comerciais, jurídicas ou
+  financeiras tomadas com base nos dados retornados pelas consultas, nem por indisponibilidade
+  temporária das bases de terceiros consultadas.</p>
+
+  <h2>6. Aceite</h2>
+  <p>Ao marcar a opção de aceite no cadastro, o usuário confirma que leu, compreendeu e concorda
+  integralmente com estes termos.</p>
+</div>
+{% endblock %}

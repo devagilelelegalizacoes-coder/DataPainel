@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Cadastros pendentes - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Cadastros pendentes</h1>
+  <p class="muted">Analise o documento enviado e libere ou rejeite o acesso do cliente.</p>
+</div>
+
+{% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
+
+{% if pendentes %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>CNPJ / Carteirinha</th><th>Documento</th><th>Solicitado em</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for p in pendentes %}
+    <tr>
+      <td>{{ p.name }}</td>
+      <td>{{ p.email }}</td>
+      <td>{{ "Despachante" if p.tipo_profissional == "despachante" else "Agência de veículos" }}</td>
+      <td>{{ p.cnpj_ou_carteirinha }}</td>
+      <td><a href="/operador/cadastros/{{ p.id }}/documento" target="_blank" class="doc-link">📎 Ver documento</a></td>
+      <td>{{ p.created_at }}</td>
+      <td>
+        <form method="post" action="/operador/cadastros/{{ p.id }}/aprovar" class="admin-inline-form">
+          <button type="submit" class="btn-primary btn-sm">Aprovar</button>
+        </form>
+        <form method="post" action="/operador/cadastros/{{ p.id }}/rejeitar" class="admin-inline-form">
+          <input type="text" name="motivo" placeholder="Motivo da rejeição" required>
+          <button type="submit" class="btn-link">Rejeitar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum cadastro pendente no momento.</p>
+{% endif %}
+{% endblock %}

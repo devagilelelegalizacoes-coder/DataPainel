@@ -341,3 +341,36 @@ form input:focus, form textarea:focus {
   line-height: 1;
 }
 .modal-close:hover { color: var(--text); }
+
+/* Footer */
+.footer {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.footer a { color: var(--text-muted); text-decoration: none; }
+.footer a:hover { color: var(--primary); text-decoration: underline; }
+.footer span { margin: 0 8px; }
+
+/* Legal pages */
+.legal-page h1 { margin-bottom: 4px; }
+.legal-page h2 { margin-top: 28px; font-size: 17px; }
+.legal-page p, .legal-page li { color: var(--text-muted); line-height: 1.6; }
+
+/* Cadastro / aprovação */
+.doc-link { display: inline-block; margin-top: 4px; }
+.logo-preview { max-height: 48px; margin-top: 8px; }
+.chip-pendente { background: #fff4e0; color: #b06a00; }
+.chip-rejeitado { background: var(--error-bg); color: var(--error-text); }
+.checkbox-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 12px 0;
+}
+.checkbox-line input { width: auto; margin-top: 2px; }

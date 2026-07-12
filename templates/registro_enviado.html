@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Cadastro enviado - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h1>Cadastro enviado</h1>
+  <p class="alert alert-info">Sua solicitação foi enviada com sucesso e está em análise. Você
+  receberá acesso assim que um operador validar seus dados e documento.</p>
+  <p class="auth-footer"><a href="/login">Voltar para o login</a></p>
+</div>
+{% endblock %}

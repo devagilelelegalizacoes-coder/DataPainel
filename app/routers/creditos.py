@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from app.templates import templates
 
 from app.auth import get_current_user, get_user_by_id
 from app.credit_packages import get_pacote, listar_pacotes
@@ -16,7 +16,6 @@ from app.payments import (
 )
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/creditos", response_class=HTMLResponse)

@@ -3,24 +3,29 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}APIBrasil{% endblock %}</title>
+  <title>{% block title %}{{ get_config().nome_sistema }}{% endblock %}</title>
+  {% if get_config().tem_favicon %}<link rel="icon" href="/config/favicon">{% endif %}
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   {% if user %}
   <nav class="navbar">
     <div class="navbar-brand">
-      <span class="navbar-logo">◆</span> APIBrasil
+      <span class="navbar-logo">◆</span> {{ get_config().nome_sistema }}
     </div>
     <div class="navbar-links">
       <a href="/dashboard">Dashboard</a>
       <a href="/consultas">Consultas</a>
       <a href="/creditos">Créditos</a>
-      {% if user.is_operador or user.is_admin %}<a href="/operador">Operador</a>{% endif %}
+      {% if user.is_operador or user.is_admin %}
+      <a href="/operador">Operador</a>
+      <a href="/operador/cadastros">Cadastros</a>
+      {% endif %}
       {% if user.is_admin %}
       <a href="/admin/consultas">Admin</a>
       <a href="/admin/usuarios">Usuários</a>
       <a href="/admin/operadores">Operadores</a>
+      <a href="/admin/config">Personalização</a>
       {% endif %}
     </div>
     <div class="navbar-user">
@@ -33,5 +38,10 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
+  <footer class="footer">
+    <a href="/termos">Termos de Responsabilidade</a>
+    <span>·</span>
+    <a href="/privacidade">Política de Privacidade</a>
+  </footer>
 </body>
 </html>

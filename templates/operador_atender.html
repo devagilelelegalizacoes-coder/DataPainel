@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Atender pedido #{{ consulta.id }} - APIBrasil{% endblock %}
+{% block title %}Atender pedido #{{ consulta.id }} - {{ get_config().nome_sistema }}{% endblock %}
 {% block content %}
 <div class="page-header">
   <a href="/operador" class="back-link">&larr; Voltar para a fila</a>
