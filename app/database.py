@@ -60,6 +60,25 @@ CREATE TABLE IF NOT EXISTS consulta_documentos (
     FOREIGN KEY (consulta_id) REFERENCES consultas (id)
 );
 
+CREATE TABLE IF NOT EXISTS precos_segmento (
+    tipo_profissional TEXT NOT NULL,
+    tipo_consulta_id TEXT NOT NULL,
+    custo_creditos INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (tipo_profissional, tipo_consulta_id),
+    FOREIGN KEY (tipo_consulta_id) REFERENCES tipos_consulta (id)
+);
+
+CREATE TABLE IF NOT EXISTS precos_clientes (
+    user_id INTEGER NOT NULL,
+    tipo_consulta_id TEXT NOT NULL,
+    custo_creditos INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, tipo_consulta_id),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (tipo_consulta_id) REFERENCES tipos_consulta (id)
+);
+
 CREATE TABLE IF NOT EXISTS pagamentos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

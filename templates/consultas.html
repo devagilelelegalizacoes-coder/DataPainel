@@ -22,7 +22,9 @@
     </ul>
     {% endif %}
     <div class="consulta-card-footer">
-      <span class="chip">{{ tipo.custo_creditos }} créditos</span>
+      {% set custo_atual = precos[tipo.id] if precos and tipo.id in precos else tipo.custo_creditos %}
+      <span class="chip">{{ custo_atual }} crédito{{ 's' if custo_atual != 1 else '' }}</span>
+      {% if custo_atual != tipo.custo_creditos %}<span class="chip chip-ativo">preço especial</span>{% endif %}
       {% if tipo.disponivel %}
       <button type="button" class="btn-primary btn-sm" onclick='abrirModal("{{ tipo.id }}", {{ tipo.nome|tojson }}, {{ tipo.campo_label|tojson }}, {{ tipo.campo_placeholder|tojson }}, {{ tipo.lista_documentos_exigidos|tojson }})'>
         Consultar

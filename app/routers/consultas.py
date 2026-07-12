@@ -21,6 +21,7 @@ from app.credits import (
     salvar_documento_consulta,
 )
 from app.pdf_report import gerar_pdf_consulta
+from app.pricing import resolver_custo, resolver_custos
 from apibrasil.agregados_propria import AgregadosPropriaService
 from apibrasil.analitico_veicular import AnaliticoVeicularService
 from apibrasil.base_estadual import BaseEstadualService
@@ -99,13 +100,15 @@ def consultas_page(request: Request):
         return RedirectResponse(url="/login", status_code=303)
 
     consultas = listar_consultas(user["id"], limit=20)
+    tipos = listar_consulta_types()
     return templates.TemplateResponse(
         request,
         "consultas.html",
         {
             "user": user,
             "consultas": consultas,
-            "tipos": listar_consulta_types(),
+            "tipos": tipos,
+            "precos": resolver_custos(user, tipos),
             "resultado": None,
             "erro": None,
         },
@@ -153,7 +156,7 @@ async def consultas_submit(
 
     arquivos = [documento_1, documento_2, documento_3, documento_4, documento_5][:MAX_DOCUMENTOS_EXIGIDOS]
     placa = placa.strip().upper()
-    custo = tipo.custo_creditos
+    custo = resolver_custo(user, tipo)
     resultado = None
     erro = None
 
@@ -210,6 +213,7 @@ async def consultas_submit(
 
     user = get_user_by_id(user["id"])
     consultas = listar_consultas(user["id"], limit=20)
+    tipos = listar_consulta_types()
 
     return templates.TemplateResponse(
         request,
@@ -217,7 +221,8 @@ async def consultas_submit(
         {
             "user": user,
             "consultas": consultas,
-            "tipos": listar_consulta_types(),
+            "tipos": tipos,
+            "precos": resolver_custos(user, tipos),
             "tipo_ativo": tipo,
             "erro": erro,
         },

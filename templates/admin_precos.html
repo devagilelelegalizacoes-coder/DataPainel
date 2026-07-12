@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Preços - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Preços diferenciados</h1>
+  <p class="muted">Defina preços padrão por segmento (despachante/agência) e contratos individuais por cliente. Prioridade: contrato do cliente &gt; preço do segmento &gt; preço padrão do card.</p>
+</div>
+
+<div class="detalhe-card admin-form-card">
+  <h3>Preço por segmento</h3>
+  <form method="post" action="/admin/precos/segmento" class="admin-form">
+    <div class="admin-form-row">
+      <div>
+        <label>Segmento</label>
+        <select name="tipo_profissional" required>
+          <option value="despachante">Despachante</option>
+          <option value="agencia">Agência de veículos</option>
+        </select>
+      </div>
+      <div>
+        <label>Tipo de consulta</label>
+        <select name="tipo_consulta_id" required>
+          {% for tipo in tipos %}
+          <option value="{{ tipo.id }}">{{ tipo.nome }} (padrão: {{ tipo.custo_creditos }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Créditos</label>
+        <input type="number" name="custo_creditos" min="0" required>
+      </div>
+    </div>
+    <div class="admin-form-actions">
+      <button type="submit" class="btn-primary btn-sm">Salvar preço do segmento</button>
+    </div>
+  </form>
+
+  {% if precos_segmento %}
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Segmento</th><th>Consulta</th><th>Créditos</th><th></th></tr></thead>
+    <tbody>
+      {% for p in precos_segmento %}
+      <tr>
+        <td>{{ "Despachante" if p.tipo_profissional == "despachante" else "Agência de veículos" }}</td>
+        <td>{{ p.tipo_nome }}</td>
+        <td>{{ p.custo_creditos }}</td>
+        <td>
+          <form method="post" action="/admin/precos/segmento/excluir" class="admin-inline-form">
+            <input type="hidden" name="tipo_profissional" value="{{ p.tipo_profissional }}">
+            <input type="hidden" name="tipo_consulta_id" value="{{ p.tipo_consulta_id }}">
+            <button type="submit" class="btn-link btn-link-danger">Remover</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Nenhum preço de segmento definido — todos pagam o preço padrão do card.</p>
+  {% endif %}
+</div>
+
+<div class="detalhe-card admin-form-card">
+  <h3>Contrato por cliente</h3>
+  <form method="post" action="/admin/precos/clientes" class="admin-form">
+    <div class="admin-form-row">
+      <div>
+        <label>Cliente</label>
+        <select name="user_id" required>
+          {% for u in usuarios %}
+          <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Tipo de consulta</label>
+        <select name="tipo_consulta_id" required>
+          {% for tipo in tipos %}
+          <option value="{{ tipo.id }}">{{ tipo.nome }} (padrão: {{ tipo.custo_creditos }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Créditos</label>
+        <input type="number" name="custo_creditos" min="0" required>
+      </div>
+    </div>
+    <div class="admin-form-actions">
+      <button type="submit" class="btn-primary btn-sm">Salvar contrato do cliente</button>
+    </div>
+  </form>
+
+  {% if precos_clientes %}
+  <div class="table-wrap">
+  <table class="table">
+    <thead><tr><th>Cliente</th><th>Consulta</th><th>Créditos</th><th></th></tr></thead>
+    <tbody>
+      {% for p in precos_clientes %}
+      <tr>
+        <td>{{ p.cliente_nome }}</td>
+        <td>{{ p.tipo_nome }}</td>
+        <td>{{ p.custo_creditos }}</td>
+        <td>
+          <form method="post" action="/admin/precos/clientes/excluir" class="admin-inline-form">
+            <input type="hidden" name="user_id" value="{{ p.user_id }}">
+            <input type="hidden" name="tipo_consulta_id" value="{{ p.tipo_consulta_id }}">
+            <button type="submit" class="btn-link btn-link-danger">Remover</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">Nenhum contrato individual definido.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -13,6 +13,14 @@ from app.consulta_types import (
     listar_consulta_types,
 )
 from app.credits import relatorio_operadores
+from app.pricing import (
+    definir_preco_cliente,
+    definir_preco_segmento,
+    excluir_preco_cliente,
+    excluir_preco_segmento,
+    listar_precos_clientes,
+    listar_precos_segmento,
+)
 
 TAMANHO_MAX_LOGO = 2 * 1024 * 1024  # 2MB
 
@@ -274,3 +282,80 @@ async def admin_config_salvar(
         atualizar_favicon(conteudo, favicon.content_type or "image/png")
 
     return RedirectResponse(url="/admin/config?sucesso=Personaliza%C3%A7%C3%A3o+atualizada", status_code=303)
+
+
+@router.get("/admin/precos", response_class=HTMLResponse)
+def admin_precos_page(request: Request):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    return templates.TemplateResponse(
+        request,
+        "admin_precos.html",
+        {
+            "user": user,
+            "tipos": listar_consulta_types(),
+            "usuarios": [u for u in listar_usuarios() if not u["is_admin"] and not u["is_operador"]],
+            "precos_segmento": listar_precos_segmento(),
+            "precos_clientes": listar_precos_clientes(),
+        },
+    )
+
+
+@router.post("/admin/precos/segmento")
+def admin_precos_segmento_criar(
+    request: Request,
+    tipo_profissional: str = Form(...),
+    tipo_consulta_id: str = Form(...),
+    custo_creditos: int = Form(...),
+):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    definir_preco_segmento(tipo_profissional, tipo_consulta_id, max(0, custo_creditos))
+    return RedirectResponse(url="/admin/precos", status_code=303)
+
+
+@router.post("/admin/precos/segmento/excluir")
+def admin_precos_segmento_excluir(
+    request: Request,
+    tipo_profissional: str = Form(...),
+    tipo_consulta_id: str = Form(...),
+):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    excluir_preco_segmento(tipo_profissional, tipo_consulta_id)
+    return RedirectResponse(url="/admin/precos", status_code=303)
+
+
+@router.post("/admin/precos/clientes")
+def admin_precos_cliente_criar(
+    request: Request,
+    user_id: int = Form(...),
+    tipo_consulta_id: str = Form(...),
+    custo_creditos: int = Form(...),
+):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    definir_preco_cliente(user_id, tipo_consulta_id, max(0, custo_creditos))
+    return RedirectResponse(url="/admin/precos", status_code=303)
+
+
+@router.post("/admin/precos/clientes/excluir")
+def admin_precos_cliente_excluir(
+    request: Request,
+    user_id: int = Form(...),
+    tipo_consulta_id: str = Form(...),
+):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    excluir_preco_cliente(user_id, tipo_consulta_id)
+    return RedirectResponse(url="/admin/precos", status_code=303)

@@ -44,6 +44,7 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Personalização (nome do sistema, logo login, favicon) | `app/config_sistema.py`, `app/routers/admin.py` (`/admin/config`), `templates/admin_config.html` |
 | Templates Jinja2 compartilhados (registra `get_config()` como global) | `app/templates.py` — **todo router importa `templates` daqui, nunca instancia `Jinja2Templates` de novo** |
 | Páginas legais estáticas | `templates/termos.html`, `templates/privacidade.html`, rotas em `app/routers/auth.py` |
+| Preços diferenciados por segmento/cliente | `app/pricing.py` (`resolver_custo`), `app/routers/admin.py` (`/admin/precos`), `templates/admin_precos.html` |
 | Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
 | Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
 
@@ -184,9 +185,27 @@ Todo template usa `{{ get_config().nome_sistema }}` no `<title>` e na navbar, e
 própria instância `Jinja2Templates(directory="templates")`**, senão o global não existe e o template
 quebra com `UndefinedError`.
 
+## Preços diferenciados por segmento e por cliente
+
+`tipo.custo_creditos` é só o preço **padrão** do card. O preço real cobrado de um usuário vem de
+`resolver_custo(user, tipo)` em `app/pricing.py`, com prioridade:
+**contrato individual do cliente (`precos_clientes`) > preço do segmento (`precos_segmento`,
+por `tipo_profissional`) > `tipo.custo_creditos` padrão**. `consultas_submit()` já usa
+`resolver_custo()` para o débito real — **nunca voltar a usar `tipo.custo_creditos` direto no
+débito**, senão contratos especiais deixam de valer. A tela de `/consultas` também precisa exibir
+o preço resolvido (`resolver_custos(user, tipos)`, passado como dict `precos` para o template) para
+o cliente ver o valor que ele realmente paga, não o padrão do card.
+
+Gerenciado em `/admin/precos` (dois formulários independentes: segmento e cliente, cada um com
+tabela de overrides existentes + botão remover). `definir_preco_segmento()`/`definir_preco_cliente()`
+usam `INSERT ... ON CONFLICT ... DO UPDATE` (upsert) nas chaves primárias compostas
+`(tipo_profissional, tipo_consulta_id)` / `(user_id, tipo_consulta_id)` — reaproveitar esse padrão
+para qualquer tabela de override futura em vez de fazer SELECT-then-INSERT/UPDATE separado.
+
 ## Sistema de créditos (não mudar o fluxo)
 
-- Custo é definido por tipo em `ConsultaType.custo_creditos` (não existe mais constante global fixa).
+- Custo é definido por tipo em `ConsultaType.custo_creditos` (não existe mais constante global fixa) —
+  mas o valor efetivamente cobrado de um usuário específico passa por `resolver_custo()` (ver acima).
 - Fluxo em `consultas_submit`: debita créditos **antes** de chamar a API → se a API falhar
   (`APIBrasilError`), estorna automaticamente e grava a consulta como `status="erro"` com
   `custo_creditos=0`. Se `debitar_creditos` já falhar por saldo insuficiente, não chama a API e não
@@ -209,4 +228,8 @@ quebra com `UndefinedError`.
 A conta tem saldo real limitado — já foi zerada mais de uma vez testando a mesma placa repetidamente.
 Para validar UI/PDF sem chamar a API de verdade, inserir um resultado de exemplo direto no SQLite
 (`resultado_json` com um payload plausível) em vez de repetir consultas reais. Só chamar a API de
-verdade quando o teste exigir validar a integração em si.
+verdade quando o teste exigir validar a integração em si. **Para testar fluxos que não são sobre a
+API em si** (créditos, preços, permissões, upload de documento) — usar sempre um tipo `manual=1`
+(ex: `score-veicular`) no teste ponta a ponta, nunca um tipo automático (`base-nacional-v2`, etc.):
+já aconteceu de um teste de preços acabar chamando a API de verdade sem querer e gastando 1 crédito
+real, só porque o tipo escolhido para o teste tinha `manual=0`.
