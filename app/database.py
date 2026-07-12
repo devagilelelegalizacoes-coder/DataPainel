@@ -80,6 +80,19 @@ CREATE TABLE IF NOT EXISTS precos_clientes (
     FOREIGN KEY (tipo_consulta_id) REFERENCES tipos_consulta (id)
 );
 
+CREATE TABLE IF NOT EXISTS mensagens_chat (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente_id INTEGER NOT NULL,
+    autor_id INTEGER NOT NULL,
+    autor_tipo TEXT NOT NULL,
+    mensagem TEXT NOT NULL,
+    lida_pelo_cliente INTEGER NOT NULL DEFAULT 0,
+    lida_pelo_operador INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (cliente_id) REFERENCES users (id),
+    FOREIGN KEY (autor_id) REFERENCES users (id)
+);
+
 CREATE TABLE IF NOT EXISTS pagamentos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

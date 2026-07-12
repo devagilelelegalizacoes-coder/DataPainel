@@ -9,8 +9,16 @@ from app.auth import (
     aprovar_cadastro,
     get_current_user,
     get_documento_cadastro,
+    get_user_by_id,
     listar_cadastros_pendentes,
     rejeitar_cadastro,
+)
+from app.chat import (
+    contar_conversas_nao_lidas,
+    enviar_mensagem,
+    listar_conversas,
+    listar_mensagens,
+    marcar_lidas,
 )
 from app.consulta_types import get_consulta_type
 from app.credits import (
@@ -114,6 +122,68 @@ def operador_cadastro_rejeitar(request: Request, user_id: int, motivo: str = For
 
     rejeitar_cadastro(user_id, motivo)
     return RedirectResponse(url="/operador/cadastros", status_code=303)
+
+
+@router.get("/operador/chat", response_class=HTMLResponse)
+def operador_chat_inbox(request: Request):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    conversas = listar_conversas()
+    return templates.TemplateResponse(
+        request,
+        "operador_chat.html",
+        {"user": user, "conversas": conversas},
+    )
+
+
+@router.get("/operador/chat/api/nao-lidas")
+def operador_chat_nao_lidas(request: Request):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    return JSONResponse({"total": contar_conversas_nao_lidas()})
+
+
+@router.get("/operador/chat/{cliente_id}", response_class=HTMLResponse)
+def operador_chat_conversa(request: Request, cliente_id: int):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    cliente = get_user_by_id(cliente_id)
+    if cliente is None:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+
+    mensagens = listar_mensagens(cliente_id)
+    marcar_lidas(cliente_id, "operador")
+    return templates.TemplateResponse(
+        request,
+        "operador_chat_conversa.html",
+        {"user": user, "cliente": cliente, "mensagens": mensagens},
+    )
+
+
+@router.get("/operador/chat/{cliente_id}/api/status")
+def operador_chat_conversa_status(request: Request, cliente_id: int):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    return JSONResponse({"total": len(listar_mensagens(cliente_id))})
+
+
+@router.post("/operador/chat/{cliente_id}/enviar")
+def operador_chat_enviar(request: Request, cliente_id: int, mensagem: str = Form(...)):
+    user, redirect = _exigir_operador(request)
+    if redirect:
+        return redirect
+
+    if mensagem.strip():
+        enviar_mensagem(cliente_id=cliente_id, autor_id=user["id"], autor_tipo="operador", mensagem=mensagem.strip())
+    return RedirectResponse(url=f"/operador/chat/{cliente_id}", status_code=303)
 
 
 @router.post("/operador/{consulta_id}/puxar")

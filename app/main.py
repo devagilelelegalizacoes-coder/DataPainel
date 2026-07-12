@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.database import init_db
-from app.routers import admin, auth, consultas, creditos, dashboard, operador
+from app.routers import admin, auth, chat, consultas, creditos, dashboard, operador
 
 load_dotenv()
 
@@ -26,6 +26,7 @@ app.include_router(consultas.router)
 app.include_router(admin.router)
 app.include_router(creditos.router)
 app.include_router(operador.router)
+app.include_router(chat.router)
 
 
 @app.on_event("startup")

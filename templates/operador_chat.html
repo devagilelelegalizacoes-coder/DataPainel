@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Chat - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Chat com clientes</h1>
+  <p class="muted">Conversas de suporte. Clique em um cliente para abrir e responder.</p>
+</div>
+
+{% if conversas %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Cliente</th><th>Última mensagem</th><th>Quando</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for c in conversas %}
+    <tr class="table-row-link" onclick="window.location='/operador/chat/{{ c.cliente_id }}'">
+      <td>
+        {{ c.cliente_nome }}
+        {% if c.nao_lidas %}<span class="badge badge-pendente">{{ c.nao_lidas }} nova{{ 's' if c.nao_lidas != 1 else '' }}</span>{% endif %}
+      </td>
+      <td>{{ c.ultima_mensagem[:80] }}{{ "…" if c.ultima_mensagem|length > 80 else "" }}</td>
+      <td>{{ c.ultima_em }}</td>
+      <td><a href="/operador/chat/{{ c.cliente_id }}" class="btn-link">Abrir</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhuma conversa iniciada ainda.</p>
+{% endif %}
+
+<script>
+  let naoLidasConhecidas = {{ conversas|selectattr('nao_lidas', 'gt', 0)|list|length }};
+
+  function tocarBip() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch (e) {}
+  }
+
+  function verificarNovasMensagens() {
+    fetch("/operador/chat/api/nao-lidas")
+      .then((r) => r.json())
+      .then((dados) => {
+        if (dados.total > naoLidasConhecidas) {
+          tocarBip();
+          window.location.reload();
+        }
+      })
+      .catch(() => {});
+  }
+  setInterval(verificarNovasMensagens, 6000);
+</script>
+{% endblock %}

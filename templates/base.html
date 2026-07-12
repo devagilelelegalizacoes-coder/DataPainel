@@ -18,9 +18,13 @@
       <a href="/dashboard" class="{{ 'nav-active' if path == '/dashboard' else '' }}">Dashboard</a>
       <a href="/consultas" class="{{ 'nav-active' if path.startswith('/consultas') else '' }}">Consultas</a>
       <a href="/creditos" class="{{ 'nav-active' if path.startswith('/creditos') else '' }}">Créditos</a>
+      {% set nao_lidas = get_chat_nao_lidas(user) %}
       {% if user.is_operador or user.is_admin %}
-      <a href="/operador" class="{{ 'nav-active' if path == '/operador' or (path.startswith('/operador/') and not path.startswith('/operador/cadastros')) else '' }}">Operador</a>
+      <a href="/operador/chat" class="{{ 'nav-active' if path.startswith('/operador/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
+      <a href="/operador" class="{{ 'nav-active' if path == '/operador' or (path.startswith('/operador/') and not path.startswith('/operador/cadastros') and not path.startswith('/operador/chat')) else '' }}">Operador</a>
       <a href="/operador/cadastros" class="{{ 'nav-active' if path.startswith('/operador/cadastros') else '' }}">Cadastros</a>
+      {% else %}
+      <a href="/chat" class="{{ 'nav-active' if path.startswith('/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
       {% endif %}
       {% if user.is_admin %}
       <a href="/admin/consultas" class="{{ 'nav-active' if path.startswith('/admin/consultas') else '' }}">Admin</a>

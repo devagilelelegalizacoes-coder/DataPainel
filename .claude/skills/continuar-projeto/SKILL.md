@@ -40,6 +40,7 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Painel admin de consultas (ativar/desativar/editar/criar/excluir cards) | `app/routers/admin.py`, `templates/admin_consultas.html` — restrito a `user.is_admin` |
 | Painel admin de usuários (promover operador/admin) + relatório de operadores | `app/routers/admin.py` (`/admin/usuarios`, `/admin/operadores`), `app/auth.py` (`listar_usuarios`, `alternar_operador`, `alternar_admin`) |
 | Fila de atendimento manual (consultas sem API) | `app/routers/operador.py`, `templates/operador.html`/`operador_atender.html` — restrito a `user.is_operador` ou `is_admin` |
+| Chat interno cliente ↔ operador | `app/chat.py`, `app/routers/chat.py` (`/chat`, cliente), `app/routers/operador.py` (`/operador/chat`, inbox e conversa) |
 | Pré-cadastro e aprovação de clientes | `app/auth.py` (`criar_pre_cadastro`, `aprovar_cadastro`, `rejeitar_cadastro`), `app/routers/auth.py` (`/registro`), `app/routers/operador.py` (`/operador/cadastros`) |
 | Personalização (nome do sistema, logo login, favicon) | `app/config_sistema.py`, `app/routers/admin.py` (`/admin/config`), `templates/admin_config.html` |
 | Templates Jinja2 compartilhados (registra `get_config()` como global) | `app/templates.py` — **todo router importa `templates` daqui, nunca instancia `Jinja2Templates` de novo** |
@@ -184,6 +185,33 @@ Todo template usa `{{ get_config().nome_sistema }}` no `<title>` e na navbar, e
 = get_configuracoes`) — **todo router deve importar `templates` de `app.templates`, nunca criar sua
 própria instância `Jinja2Templates(directory="templates")`**, senão o global não existe e o template
 quebra com `UndefinedError`.
+
+## Chat interno (cliente ↔ operadores)
+
+Um canal de suporte **por cliente**, não por consulta — é uma conversa contínua entre aquele
+cliente e "a equipe" (qualquer operador pode ler/responder, não é 1:1 fixo com um operador
+específico). Tabela `mensagens_chat` (`cliente_id`, `autor_id`, `autor_tipo` 'cliente'/'operador',
+`lida_pelo_cliente`, `lida_pelo_operador`).
+
+- Cliente: `/chat` (ver + enviar, `app/routers/chat.py`). Ao abrir a página, `marcar_lidas(user_id,
+  "cliente")` já zera o contador — não precisa de botão "marcar como lida".
+- Operador: `/operador/chat` lista uma conversa por cliente que já trocou mensagem
+  (`listar_conversas()`, com contagem de não lidas e ordenada pela mais recente), `/operador/chat/{
+  cliente_id}` abre a conversa e marca como lida pelo operador. **Qualquer** operador/admin pode
+  responder qualquer cliente — não existe atribuição fixa tipo `operador_id` como nas consultas
+  manuais, é por design (é suporte geral, não uma fila com "puxar").
+- Atualização é só polling (6s, mesmo padrão do resto do projeto — não usar websocket/SSE):
+  `/chat/api/status` e `/operador/chat/api/nao-lidas` / `/operador/chat/{cliente_id}/api/status`
+  retornam contagens; JS recarrega a página se o total mudou. Operador ganha o mesmo bipe
+  (`OscillatorNode`) da fila de consultas manuais quando chega mensagem nova não lida.
+- Badge de não lidas na navbar (`base.html`) vem de `get_chat_nao_lidas(user)`, registrado como
+  global do Jinja em `app/templates.py` — mesma técnica do `get_config()`. Calcula diferente por
+  papel: cliente vê não lidas só dele, operador/admin vê `contar_conversas_nao_lidas()` (conversas
+  com pelo menos 1 mensagem de cliente não lida), não soma de mensagens.
+- **Cuidado com ordem de rotas** (mesma pegadinha das consultas manuais): `/operador/chat`,
+  `/operador/chat/api/nao-lidas` e `/operador/chat/{cliente_id}/api/status` estão todas registradas
+  **antes** de `/operador/{consulta_id}` em `operador.py` — segmentos com contagem diferente não
+  colidem entre si, mas todas precisam continuar antes da rota genérica de path param único.
 
 ## Cards visíveis por segmento (despachante x agência)
 

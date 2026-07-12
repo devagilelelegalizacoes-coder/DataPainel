@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Chat - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Chat com a equipe</h1>
+  <p class="muted">Tire dúvidas diretamente com um operador. Assim que alguém responder, a conversa atualiza aqui.</p>
+</div>
+
+<div class="chat-box" id="chat-box">
+  {% if mensagens %}
+  {% for m in mensagens %}
+  <div class="chat-msg {{ 'chat-msg-mine' if m.autor_tipo == 'cliente' else 'chat-msg-theirs' }}">
+    <div class="chat-msg-bubble">
+      <p class="chat-msg-text">{{ m.mensagem }}</p>
+      <span class="chat-msg-meta">{{ m.autor_nome }} · {{ m.created_at }}</span>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <p class="muted" style="text-align:center; padding:24px;">Nenhuma mensagem ainda. Envie sua dúvida abaixo.</p>
+  {% endif %}
+</div>
+
+<form method="post" action="/chat/enviar" class="chat-form">
+  <input type="text" name="mensagem" placeholder="Digite sua mensagem..." required autocomplete="off">
+  <button type="submit" class="btn-primary btn-sm">Enviar</button>
+</form>
+
+<script>
+  const chatBox = document.getElementById("chat-box");
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  let totalConhecido = {{ mensagens|length }};
+  function verificarNovasMensagens() {
+    fetch("/chat/api/status")
+      .then((r) => r.json())
+      .then((dados) => {
+        if (dados.total > totalConhecido) {
+          window.location.reload();
+        }
+      })
+      .catch(() => {});
+  }
+  setInterval(verificarNovasMensagens, 6000);
+</script>
+{% endblock %}
