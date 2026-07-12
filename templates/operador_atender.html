@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Atender pedido #{{ consulta.id }} - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <a href="/operador" class="back-link">&larr; Voltar para a fila</a>
+  <h1>Atender pedido {{ consulta.placa }}</h1>
+  <p class="muted">{{ tipo.nome if tipo else consulta.tipo }} · cliente #{{ consulta.user_id }} · puxado em {{ consulta.atendido_em }}</p>
+</div>
+
+{% if erro %}<p class="alert alert-error">{{ erro }}</p>{% endif %}
+
+<div class="detalhe-card admin-form-card">
+  <h3>Concluir atendimento</h3>
+  <form method="post" action="/operador/{{ consulta.id }}/concluir" enctype="multipart/form-data">
+    <label>Observação / resultado</label>
+    <textarea name="observacao" rows="5" placeholder="Descreva o resultado da consulta manual..."></textarea>
+
+    <label>Documento (opcional, será comprimido automaticamente)</label>
+    <input type="file" name="arquivo">
+
+    <div class="admin-form-actions">
+      <button type="submit" class="btn-primary btn-sm">Concluir e liberar para o cliente</button>
+    </div>
+  </form>
+</div>
+
+<div class="detalhe-card">
+  <h3>Não foi possível atender?</h3>
+  <p class="muted" style="margin-top:0;">Os créditos do cliente serão estornados automaticamente.</p>
+  <form method="post" action="/operador/{{ consulta.id }}/erro">
+    <label>Motivo</label>
+    <textarea name="mensagem" rows="3" required placeholder="Ex: placa não encontrada na base consultada"></textarea>
+    <div class="admin-form-actions">
+      <button type="submit" class="btn-link btn-link-danger" style="font-size:14px;">Marcar como não atendido</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

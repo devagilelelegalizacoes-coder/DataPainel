@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from app.auth import get_current_user
+from app.auth import alternar_admin, alternar_operador, get_current_user, listar_usuarios
 from app.consulta_types import (
     alternar_disponibilidade,
     atualizar_consulta_type,
@@ -11,6 +11,7 @@ from app.consulta_types import (
     get_consulta_type,
     listar_consulta_types,
 )
+from app.credits import relatorio_operadores
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -76,6 +77,7 @@ def admin_consulta_criar(
     campo_label: str = Form("Placa"),
     campo_placeholder: str = Form("Ex: ABC1234"),
     campos_incluidos: str = Form(""),
+    manual: bool = Form(False),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -106,6 +108,7 @@ def admin_consulta_criar(
         campo_placeholder=campo_placeholder or "Ex: ABC1234",
         disponivel=False,
         campos_incluidos=campos_incluidos,
+        manual=manual,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -121,6 +124,7 @@ def admin_consulta_editar(
     campo_label: str = Form("Placa"),
     campo_placeholder: str = Form("Ex: ABC1234"),
     campos_incluidos: str = Form(""),
+    manual: bool = Form(False),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -138,6 +142,7 @@ def admin_consulta_editar(
         campo_label=campo_label or "Placa",
         campo_placeholder=campo_placeholder or "Ex: ABC1234",
         campos_incluidos=campos_incluidos,
+        manual=manual,
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -166,3 +171,54 @@ def admin_consulta_excluir(request: Request, tipo_id: str):
 
     excluir_consulta_type(tipo_id)
     return RedirectResponse(url="/admin/consultas", status_code=303)
+
+
+@router.get("/admin/usuarios", response_class=HTMLResponse)
+def admin_usuarios_page(request: Request):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    usuarios = listar_usuarios()
+    return templates.TemplateResponse(
+        request,
+        "admin_usuarios.html",
+        {"user": user, "usuarios": usuarios},
+    )
+
+
+@router.post("/admin/usuarios/{user_id}/operador")
+def admin_toggle_operador(request: Request, user_id: int):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    alternar_operador(user_id)
+    return RedirectResponse(url="/admin/usuarios", status_code=303)
+
+
+@router.post("/admin/usuarios/{user_id}/admin")
+def admin_toggle_admin(request: Request, user_id: int):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    if user_id == user["id"]:
+        return RedirectResponse(url="/admin/usuarios", status_code=303)
+
+    alternar_admin(user_id)
+    return RedirectResponse(url="/admin/usuarios", status_code=303)
+
+
+@router.get("/admin/operadores", response_class=HTMLResponse)
+def admin_operadores_page(request: Request):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    relatorio = relatorio_operadores()
+    return templates.TemplateResponse(
+        request,
+        "admin_operadores.html",
+        {"user": user, "relatorio": relatorio},
+    )

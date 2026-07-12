@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Administrar Usuários - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Usuários</h1>
+  <p class="muted">Promova usuários a operador (fila de atendimento manual) ou administrador.</p>
+</div>
+
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Nome</th><th>E-mail</th><th>Créditos</th><th>Papéis</th><th>Cadastro</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for u in usuarios %}
+    <tr>
+      <td>{{ u.name }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.credits }}</td>
+      <td>
+        {% if u.is_admin %}<span class="chip chip-ativo">Admin</span>{% endif %}
+        {% if u.is_operador %}<span class="chip chip-ativo">Operador</span>{% endif %}
+        {% if not u.is_admin and not u.is_operador %}<span class="chip chip-muted">Cliente</span>{% endif %}
+      </td>
+      <td>{{ u.created_at }}</td>
+      <td>
+        <form method="post" action="/admin/usuarios/{{ u.id }}/operador" class="admin-inline-form">
+          <button type="submit" class="btn-link">{{ "Remover operador" if u.is_operador else "Tornar operador" }}</button>
+        </form>
+        {% if u.id != user.id %}
+        <form method="post" action="/admin/usuarios/{{ u.id }}/admin" class="admin-inline-form">
+          <button type="submit" class="btn-link">{{ "Remover admin" if u.is_admin else "Tornar admin" }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

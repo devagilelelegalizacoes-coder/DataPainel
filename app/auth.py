@@ -58,3 +58,19 @@ def get_current_user(request: Request) -> Optional[dict]:
     if not user_id:
         return None
     return get_user_by_id(user_id)
+
+
+def listar_usuarios() -> list[dict]:
+    with db_session() as conn:
+        rows = conn.execute("SELECT * FROM users ORDER BY created_at ASC").fetchall()
+        return [dict(row) for row in rows]
+
+
+def alternar_operador(user_id: int) -> None:
+    with db_session() as conn:
+        conn.execute("UPDATE users SET is_operador = 1 - is_operador WHERE id = ?", (user_id,))
+
+
+def alternar_admin(user_id: int) -> None:
+    with db_session() as conn:
+        conn.execute("UPDATE users SET is_admin = 1 - is_admin WHERE id = ?", (user_id,))

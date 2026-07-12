@@ -123,6 +123,7 @@ form input:focus, form textarea:focus {
 
 .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; }
 .alert-error { background: var(--error-bg); color: var(--error-text); }
+.alert-info { background: var(--primary-soft); color: var(--primary-dark); }
 
 /* Dashboard stat cards */
 .cards-row { display: flex; gap: 16px; margin: 0 0 8px; flex-wrap: wrap; }
@@ -256,6 +257,17 @@ form input:focus, form textarea:focus {
 .admin-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
 .admin-form-actions { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
 .admin-form-actions .btn-primary { margin-top: 0; }
+.admin-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+.admin-checkbox input { width: auto; margin: 0; }
 .admin-card-actions {
   display: flex;
   gap: 14px;
@@ -282,6 +294,7 @@ form input:focus, form textarea:focus {
 .badge-sucesso { background: var(--success-bg); color: var(--success-text); }
 .badge-erro { background: var(--error-bg); color: var(--error-text); }
 .badge-pendente { background: #fff4e0; color: #b26a00; }
+.badge-em_atendimento { background: var(--primary-soft); color: var(--primary-dark); }
 
 .result-box {
   background: #14161f;

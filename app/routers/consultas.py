@@ -1,3 +1,4 @@
+import gzip
 import json
 
 from fastapi import APIRouter, Form, HTTPException, Request
@@ -11,6 +12,7 @@ from app.credits import (
     SaldoInsuficienteError,
     debitar_creditos,
     estornar_creditos,
+    get_anexo,
     get_consulta,
     listar_consultas,
     registrar_consulta,
@@ -131,6 +133,17 @@ def consultas_submit(request: Request, tipo_id: str, placa: str = Form(...)):
         except SaldoInsuficienteError as exc:
             erro = str(exc)
 
+        if erro is None and tipo.manual:
+            consulta_id = registrar_consulta(
+                user_id=user["id"],
+                tipo=tipo.id,
+                placa=placa,
+                custo_creditos=custo,
+                status="pendente",
+                resultado_resumo="Aguardando atendimento de um operador",
+            )
+            return RedirectResponse(url=f"/consultas/historico/{consulta_id}", status_code=303)
+
         if erro is None:
             try:
                 resultado = _executar_consulta(tipo.id, placa)
@@ -220,4 +233,26 @@ def consulta_pdf(request: Request, consulta_id: int):
         headers={
             "Content-Disposition": f'attachment; filename="consulta-{consulta["placa"]}-{consulta["id"]}.pdf"'
         },
+    )
+
+
+@router.get("/consultas/historico/{consulta_id}/anexo")
+def consulta_anexo(request: Request, consulta_id: int):
+    user = get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    consulta = get_consulta(consulta_id, user["id"])
+    if consulta is None:
+        raise HTTPException(status_code=404, detail="Consulta não encontrada")
+
+    anexo = get_anexo(consulta_id)
+    if anexo is None:
+        raise HTTPException(status_code=404, detail="Esta consulta não possui anexo")
+
+    conteudo = gzip.decompress(anexo["anexo_blob"])
+    return Response(
+        content=conteudo,
+        media_type=anexo["anexo_tipo"] or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{anexo["anexo_nome"]}"'},
     )

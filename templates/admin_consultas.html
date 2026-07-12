@@ -43,6 +43,11 @@
     <label>O que essa consulta traz (um item por linha, exibido no card)</label>
     <textarea name="campos_incluidos" rows="4" placeholder="Dados do veículo&#10;Restrições&#10;Histórico de proprietários">{{ editar.lista_campos_incluidos|join('\n') if editar else '' }}</textarea>
 
+    <label class="admin-checkbox">
+      <input type="checkbox" name="manual" value="true" {% if editar and editar.manual %}checked{% endif %}>
+      Atendimento manual (não usa a API — vai para a fila do operador)
+    </label>
+
     <div class="admin-form-actions">
       <button type="submit" class="btn-primary btn-sm">{{ "Salvar alterações" if editar else "Criar consulta" }}</button>
       {% if editar %}<a href="/admin/consultas" class="btn-link">Cancelar</a>{% endif %}
@@ -59,6 +64,7 @@
     <p class="consulta-card-desc">{{ tipo.descricao }}</p>
     <div class="consulta-card-footer">
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
+      {% if tipo.manual %}<span class="chip chip-muted">Manual</span>{% endif %}
       <span class="chip {% if tipo.disponivel %}chip-ativo{% else %}chip-muted{% endif %}">
         {{ "Ativo" if tipo.disponivel else "Inativo" }}
       </span>

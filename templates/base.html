@@ -16,7 +16,12 @@
       <a href="/dashboard">Dashboard</a>
       <a href="/consultas">Consultas</a>
       <a href="/creditos">Créditos</a>
-      {% if user.is_admin %}<a href="/admin/consultas">Admin</a>{% endif %}
+      {% if user.is_operador or user.is_admin %}<a href="/operador">Operador</a>{% endif %}
+      {% if user.is_admin %}
+      <a href="/admin/consultas">Admin</a>
+      <a href="/admin/usuarios">Usuários</a>
+      <a href="/admin/operadores">Operadores</a>
+      {% endif %}
     </div>
     <div class="navbar-user">
       <span class="credits-pill">✦ {{ user.credits }} créditos</span>

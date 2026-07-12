@@ -15,11 +15,17 @@
   {% endif %}
 </div>
 
-{% if consulta.status != "sucesso" %}
+{% if consulta.status in ("pendente", "em_atendimento") %}
+<p class="alert alert-info">⏳ Sua consulta está {{ "aguardando um operador" if consulta.status == "pendente" else "sendo processada por um operador" }}. Assim que for concluída, o resultado aparece aqui automaticamente — sem custo adicional.</p>
+{% elif consulta.status == "erro" %}
 <p class="alert alert-error">{{ consulta.erro_mensagem or "Esta consulta não retornou dados." }}</p>
-{% elif not campos_principais and not secoes %}
+{% elif not campos_principais and not secoes and not consulta.anexo_nome %}
 <p class="alert alert-error">Esta consulta não possui dados detalhados para exibir.</p>
 {% else %}
+
+{% if consulta.anexo_nome %}
+<a href="/consultas/historico/{{ consulta.id }}/anexo" class="btn-primary btn-sm" style="margin-bottom:16px; display:inline-block;">📎 Baixar documento anexado</a>
+{% endif %}
 
 <div class="detalhe-grid">
   {% if campos_principais %}

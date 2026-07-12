@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     credits INTEGER NOT NULL DEFAULT 0,
     is_admin INTEGER NOT NULL DEFAULT 0,
+    is_operador INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS tipos_consulta (
     campo_placeholder TEXT NOT NULL DEFAULT 'Ex: ABC1234',
     disponivel INTEGER NOT NULL DEFAULT 1,
     campos_incluidos TEXT NOT NULL DEFAULT '',
+    manual INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -51,8 +53,16 @@ CREATE TABLE IF NOT EXISTS consultas (
     resultado_resumo TEXT,
     resultado_json TEXT,
     erro_mensagem TEXT,
+    operador_id INTEGER,
+    atendido_em TEXT,
+    concluido_em TEXT,
+    anexo_blob BLOB,
+    anexo_nome TEXT,
+    anexo_tipo TEXT,
+    anexo_tamanho_original INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    FOREIGN KEY (user_id) REFERENCES users (id)
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (operador_id) REFERENCES users (id)
 );
 """
 
@@ -229,6 +239,12 @@ def _ensure_tipo_ativo(conn: sqlite3.Connection, tipo_id: str) -> None:
     conn.execute("UPDATE tipos_consulta SET disponivel = 1 WHERE id = ?", (tipo_id,))
 
 
+def _ensure_tipo_manual(conn: sqlite3.Connection, tipo_id: str) -> None:
+    conn.execute(
+        "UPDATE tipos_consulta SET disponivel = 1, manual = 1 WHERE id = ?", (tipo_id,)
+    )
+
+
 def _ensure_debitos_v4_migrado(conn: sqlite3.Connection) -> None:
     tem_novo = conn.execute("SELECT 1 FROM tipos_consulta WHERE id = 'debitos-v4'").fetchone()
     if tem_novo:
@@ -253,6 +269,7 @@ CAMPOS_INCLUIDOS = {
     "agregados-propria": "Placa, chassi, marca/modelo, versão\nAno fabricação/modelo\nCor, combustível, motor\nUF e cidade de emplacamento",
     "leilao": "Análise de risco do veículo\nDados básicos do veículo\nHistórico de registros de leilão (comitente, data, condição)",
     "debitos-v4": "IPVA em aberto\nLicenciamento em aberto\nMultas detalhadas (data, local, valor, artigo, pontos)\nOutros débitos e restrições",
+    "score-veicular": "Pontuação de risco do veículo\nParecer elaborado por um operador\nDocumento anexo (quando aplicável)",
 }
 
 
@@ -282,8 +299,17 @@ def init_db() -> None:
         conn.executescript(SCHEMA)
         _ensure_column(conn, "consultas", "tipo", "tipo TEXT NOT NULL DEFAULT 'base-nacional-v2'")
         _ensure_column(conn, "consultas", "resultado_json", "resultado_json TEXT")
+        _ensure_column(conn, "consultas", "operador_id", "operador_id INTEGER")
+        _ensure_column(conn, "consultas", "atendido_em", "atendido_em TEXT")
+        _ensure_column(conn, "consultas", "concluido_em", "concluido_em TEXT")
+        _ensure_column(conn, "consultas", "anexo_blob", "anexo_blob BLOB")
+        _ensure_column(conn, "consultas", "anexo_nome", "anexo_nome TEXT")
+        _ensure_column(conn, "consultas", "anexo_tipo", "anexo_tipo TEXT")
+        _ensure_column(conn, "consultas", "anexo_tamanho_original", "anexo_tamanho_original INTEGER")
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "users", "is_operador", "is_operador INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "tipos_consulta", "campos_incluidos", "campos_incluidos TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "tipos_consulta", "manual", "manual INTEGER NOT NULL DEFAULT 0")
         _seed_tipos_consulta(conn)
         _ensure_seed_row(conn, "nacional")
         _ensure_seed_row(conn, "estadual")
@@ -293,5 +319,6 @@ def init_db() -> None:
         _ensure_seed_row(conn, "relatorio-veicular")
         _ensure_tipo_ativo(conn, "leilao")
         _ensure_debitos_v4_migrado(conn)
+        _ensure_tipo_manual(conn, "score-veicular")
         _ensure_campos_incluidos(conn)
         _ensure_admin_exists(conn)

@@ -14,6 +14,7 @@ class ConsultaType:
     campo_placeholder: str
     disponivel: bool = True
     campos_incluidos: str = ""
+    manual: bool = False
 
     @property
     def lista_campos_incluidos(self) -> list[str]:
@@ -31,6 +32,7 @@ def _row_to_type(row) -> ConsultaType:
         campo_placeholder=row["campo_placeholder"],
         disponivel=bool(row["disponivel"]),
         campos_incluidos=row["campos_incluidos"] if "campos_incluidos" in row.keys() else "",
+        manual=bool(row["manual"]) if "manual" in row.keys() else False,
     )
 
 
@@ -60,15 +62,16 @@ def criar_consulta_type(
     campo_placeholder: str = "Ex: ABC1234",
     disponivel: bool = True,
     campos_incluidos: str = "",
+    manual: bool = False,
 ) -> ConsultaType:
     with db_session() as conn:
         conn.execute(
             """
             INSERT INTO tipos_consulta
-                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos, manual)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos),
+            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos, int(manual)),
         )
     return get_consulta_type(id)
 
@@ -82,16 +85,17 @@ def atualizar_consulta_type(
     campo_label: str,
     campo_placeholder: str,
     campos_incluidos: str = "",
+    manual: bool = False,
 ) -> None:
     with db_session() as conn:
         conn.execute(
             """
             UPDATE tipos_consulta
             SET nome = ?, descricao = ?, icone = ?, custo_creditos = ?,
-                campo_label = ?, campo_placeholder = ?, campos_incluidos = ?
+                campo_label = ?, campo_placeholder = ?, campos_incluidos = ?, manual = ?
             WHERE id = ?
             """,
-            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, tipo_id),
+            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, int(manual), tipo_id),
         )
 
 

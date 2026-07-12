@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Relatório de Operadores - APIBrasil{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Relatório de Operadores</h1>
+  <p class="muted">Quantidade de atendimentos manuais concluídos por operador.</p>
+</div>
+
+{% if relatorio %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Operador</th><th>E-mail</th><th>Concluídos</th><th>Em andamento</th></tr>
+  </thead>
+  <tbody>
+    {% for r in relatorio %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.email }}</td>
+      <td><span class="chip chip-ativo">{{ r.total_concluidas }}</span></td>
+      <td>{{ r.total_em_andamento }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum operador cadastrado ainda. Promova um usuário em <a href="/admin/usuarios">Usuários</a>.</p>
+{% endif %}
+{% endblock %}
