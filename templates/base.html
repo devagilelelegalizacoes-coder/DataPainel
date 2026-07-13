@@ -15,30 +15,35 @@
     <div class="navbar-brand">
       <span class="navbar-logo">◆</span> {{ get_config().nome_sistema }}
     </div>
-    <div class="navbar-links">
-      <a href="/dashboard" class="{{ 'nav-active' if path == '/dashboard' else '' }}">Dashboard</a>
-      <a href="/consultas" class="{{ 'nav-active' if path.startswith('/consultas') else '' }}">Consultas</a>
-      <a href="/creditos" class="{{ 'nav-active' if path.startswith('/creditos') else '' }}">Créditos</a>
-      {% set nao_lidas = get_chat_nao_lidas(user) %}
-      {% if user.is_operador or user.is_admin %}
-      <a href="/operador/chat" class="{{ 'nav-active' if path.startswith('/operador/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
-      <a href="/operador" id="nav-operador" class="{{ 'nav-active' if path == '/operador' or (path.startswith('/operador/') and not path.startswith('/operador/cadastros') and not path.startswith('/operador/chat')) else '' }}">Operador{% if fila_pendentes %}<span class="nav-badge" id="nav-badge-fila">{{ fila_pendentes }}</span>{% endif %}</a>
-      <a href="/operador/cadastros" class="{{ 'nav-active' if path.startswith('/operador/cadastros') else '' }}">Cadastros</a>
-      {% else %}
-      <a href="/chat" class="{{ 'nav-active' if path.startswith('/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
-      {% endif %}
-      {% if user.is_admin %}
-      <a href="/admin/consultas" class="{{ 'nav-active' if path.startswith('/admin/consultas') else '' }}">Admin</a>
-      <a href="/admin/usuarios" class="{{ 'nav-active' if path.startswith('/admin/usuarios') else '' }}">Usuários</a>
-      <a href="/admin/operadores" class="{{ 'nav-active' if path.startswith('/admin/operadores') else '' }}">Operadores</a>
-      <a href="/admin/precos" class="{{ 'nav-active' if path.startswith('/admin/precos') else '' }}">Preços</a>
-      <a href="/admin/config" class="{{ 'nav-active' if path.startswith('/admin/config') else '' }}">Personalização</a>
-      {% endif %}
-    </div>
-    <div class="navbar-user">
-      <span class="credits-pill">✦ {{ user.credits }} créditos</span>
-      <span class="navbar-name">{{ user.name }}</span>
-      <a href="/logout" class="btn-link">Sair</a>
+    <button type="button" class="navbar-toggle" id="navbar-toggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="navbar-menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="navbar-menu" id="navbar-menu">
+      <div class="navbar-links">
+        <a href="/dashboard" class="{{ 'nav-active' if path == '/dashboard' else '' }}">Dashboard</a>
+        <a href="/consultas" class="{{ 'nav-active' if path.startswith('/consultas') else '' }}">Consultas</a>
+        <a href="/creditos" class="{{ 'nav-active' if path.startswith('/creditos') else '' }}">Créditos</a>
+        {% set nao_lidas = get_chat_nao_lidas(user) %}
+        {% if user.is_operador or user.is_admin %}
+        <a href="/operador/chat" class="{{ 'nav-active' if path.startswith('/operador/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
+        <a href="/operador" id="nav-operador" class="{{ 'nav-active' if path == '/operador' or (path.startswith('/operador/') and not path.startswith('/operador/cadastros') and not path.startswith('/operador/chat')) else '' }}">Operador{% if fila_pendentes %}<span class="nav-badge" id="nav-badge-fila">{{ fila_pendentes }}</span>{% endif %}</a>
+        <a href="/operador/cadastros" class="{{ 'nav-active' if path.startswith('/operador/cadastros') else '' }}">Cadastros</a>
+        {% else %}
+        <a href="/chat" class="{{ 'nav-active' if path.startswith('/chat') else '' }}">Chat{% if nao_lidas %}<span class="nav-badge">{{ nao_lidas }}</span>{% endif %}</a>
+        {% endif %}
+        {% if user.is_admin %}
+        <a href="/admin/consultas" class="{{ 'nav-active' if path.startswith('/admin/consultas') else '' }}">Admin</a>
+        <a href="/admin/usuarios" class="{{ 'nav-active' if path.startswith('/admin/usuarios') else '' }}">Usuários</a>
+        <a href="/admin/operadores" class="{{ 'nav-active' if path.startswith('/admin/operadores') else '' }}">Operadores</a>
+        <a href="/admin/precos" class="{{ 'nav-active' if path.startswith('/admin/precos') else '' }}">Preços</a>
+        <a href="/admin/config" class="{{ 'nav-active' if path.startswith('/admin/config') else '' }}">Personalização</a>
+        {% endif %}
+      </div>
+      <div class="navbar-user">
+        <span class="credits-pill">✦ {{ user.credits }} créditos</span>
+        <span class="navbar-name">{{ user.name }}</span>
+        <a href="/logout" class="btn-link">Sair</a>
+      </div>
     </div>
   </nav>
   {% endif %}
@@ -50,6 +55,28 @@
     <span>·</span>
     <a href="/privacidade">Política de Privacidade</a>
   </footer>
+
+  {% if user %}
+  <script>
+    (function () {
+      const toggle = document.getElementById("navbar-toggle");
+      const menu = document.getElementById("navbar-menu");
+      if (!toggle || !menu) return;
+      toggle.addEventListener("click", function () {
+        const aberto = menu.classList.toggle("navbar-menu-open");
+        toggle.classList.toggle("navbar-toggle-open", aberto);
+        toggle.setAttribute("aria-expanded", aberto ? "true" : "false");
+      });
+      menu.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          menu.classList.remove("navbar-menu-open");
+          toggle.classList.remove("navbar-toggle-open");
+          toggle.setAttribute("aria-expanded", "false");
+        });
+      });
+    })();
+  </script>
+  {% endif %}
 
   {% if user and (user.is_operador or user.is_admin) %}
   <script>
