@@ -46,6 +46,13 @@
       </div>
     </div>
   </nav>
+  {% set chat_url = "/operador/chat" if (user.is_operador or user.is_admin) else "/chat" %}
+  {% if not path.startswith(chat_url) %}
+  <a href="{{ chat_url }}" class="chat-fab" aria-label="Abrir chat" title="Chat">
+    💬
+    {% if nao_lidas %}<span class="nav-badge chat-fab-badge">{{ nao_lidas }}</span>{% endif %}
+  </a>
+  {% endif %}
   {% endif %}
   <main class="container">
     {% block content %}{% endblock %}

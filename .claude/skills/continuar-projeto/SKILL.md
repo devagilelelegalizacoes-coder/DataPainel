@@ -224,6 +224,12 @@ específico). Tabela `mensagens_chat` (`cliente_id`, `autor_id`, `autor_tipo` 'c
   `/operador/chat/api/nao-lidas` e `/operador/chat/{cliente_id}/api/status` estão todas registradas
   **antes** de `/operador/{consulta_id}` em `operador.py` — segmentos com contagem diferente não
   colidem entre si, mas todas precisam continuar antes da rota genérica de path param único.
+- Botão flutuante (`.chat-fab` em `base.html`, dentro do mesmo bloco `{% if user %}` da navbar,
+  então reaproveita `path` e `nao_lidas` já calculados ali) aparece em **toda página do sistema**
+  para os dois papéis — aponta para `/operador/chat` se `is_operador`/`is_admin`, senão `/chat`.
+  Fica escondido só quando o usuário já está na própria página de chat (`path.startswith(chat_url)`)
+  para não sobrepor a caixa de mensagens. Mesmo badge vermelho (`nav-badge`) da navbar, reaproveitado
+  com a classe extra `.chat-fab-badge` só para o posicionamento absoluto no canto do botão.
 
 ## Cards visíveis por segmento (despachante x agência)
 

@@ -491,6 +491,34 @@ form input:focus, form textarea:focus, form select:focus {
   vertical-align: middle;
 }
 
+/* Chat flutuante */
+.chat-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  text-decoration: none;
+  box-shadow: var(--shadow-hover);
+  z-index: 60;
+  transition: transform .15s, background .15s;
+}
+.chat-fab:hover { background: var(--primary-dark); transform: scale(1.06); }
+.chat-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  margin-left: 0;
+  border: 2px solid var(--surface);
+}
+
 /* Chat */
 .chat-box {
   background: var(--surface);
@@ -580,4 +608,5 @@ form input:focus, form textarea:focus, form select:focus {
   .chat-box { height: 62vh; padding: 14px; }
   .chat-msg-bubble { max-width: 86%; }
   .footer { padding: 20px 14px; font-size: 12px; }
+  .chat-fab { width: 50px; height: 50px; font-size: 21px; right: 16px; bottom: 16px; }
 }
