@@ -180,6 +180,17 @@ Aceite de termos é obrigatório no cadastro (`aceite_termos` checkbox, salvo co
 estáticas públicas (sem exigir login), linkadas no rodapé de `base.html` e no formulário de
 registro.
 
+`/operador/cadastros` mostra **duas** listas: pendentes (`listar_cadastros_pendentes()`,
+`status='pendente'`) e rejeitados (`listar_cadastros_rejeitados()`, `status='rejeitado'`, com o
+`motivo_rejeicao` visível e botão "Reaprovar"). **Já aconteceu de um cliente resolver o motivo da
+rejeição e o operador não conseguir liberar o acesso** — o bug era que a tela só listava
+`status='pendente'`, então depois de rejeitado o usuário desaparecia da tela pra sempre, sem
+nenhuma forma de reaprová-lo. `aprovar_cadastro()` já era (e continua sendo) seguro pra chamar em
+cima de um usuário `rejeitado`, não só `pendente` — ele só faz `UPDATE ... SET status='aprovado'`
+sem checar o status atual, então "reaprovar" é literalmente o mesmo botão/rota que aprovar da
+primeira vez. Ao adicionar uma tela nova de listagem de cadastro, sempre pensar nos **estados
+terminais** (aqui: `rejeitado`) e garantir que exista um caminho de volta, não só o caminho de ida.
+
 **Cuidado com ordem de rotas**: `/operador/cadastros` e as sub-rotas precisam estar declaradas
 **antes** de `/operador/{consulta_id}` em `app/routers/operador.py`, senão o FastAPI casa
 `"cadastros"` como `consulta_id` e quebra com 422 — já aconteceu uma vez, não mover as rotas

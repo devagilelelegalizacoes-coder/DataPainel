@@ -96,6 +96,14 @@ def listar_cadastros_pendentes() -> list[dict]:
         return [dict(row) for row in rows]
 
 
+def listar_cadastros_rejeitados() -> list[dict]:
+    with db_session() as conn:
+        rows = conn.execute(
+            "SELECT * FROM users WHERE status = 'rejeitado' ORDER BY created_at ASC"
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
 def aprovar_cadastro(user_id: int, creditos_iniciais: int = 10) -> None:
     with db_session() as conn:
         conn.execute(

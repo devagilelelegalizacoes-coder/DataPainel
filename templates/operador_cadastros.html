@@ -40,4 +40,35 @@
 {% else %}
 <p class="muted">Nenhum cadastro pendente no momento.</p>
 {% endif %}
+
+<h2 class="section-title">Cadastros rejeitados</h2>
+<p class="muted">Se o cliente resolveu o motivo da rejeição, use "Reaprovar" para liberar o acesso.</p>
+{% if rejeitados %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Nome</th><th>E-mail</th><th>Tipo</th><th>CNPJ / Carteirinha</th><th>Documento</th><th>Motivo da rejeição</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for r in rejeitados %}
+    <tr>
+      <td>{{ r.name }}</td>
+      <td>{{ r.email }}</td>
+      <td>{{ "Despachante" if r.tipo_profissional == "despachante" else "Agência de veículos" }}</td>
+      <td>{{ r.cnpj_ou_carteirinha }}</td>
+      <td><a href="/operador/cadastros/{{ r.id }}/documento" target="_blank" class="doc-link">📎 Ver documento</a></td>
+      <td>{{ r.motivo_rejeicao }}</td>
+      <td>
+        <form method="post" action="/operador/cadastros/{{ r.id }}/aprovar" class="admin-inline-form">
+          <button type="submit" class="btn-primary btn-sm">Reaprovar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum cadastro rejeitado.</p>
+{% endif %}
 {% endblock %}

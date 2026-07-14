@@ -11,6 +11,7 @@ from app.auth import (
     get_documento_cadastro,
     get_user_by_id,
     listar_cadastros_pendentes,
+    listar_cadastros_rejeitados,
     rejeitar_cadastro,
 )
 from app.chat import (
@@ -79,10 +80,11 @@ def operador_cadastros(request: Request, erro: str | None = None):
         return redirect
 
     pendentes = listar_cadastros_pendentes()
+    rejeitados = listar_cadastros_rejeitados()
     return templates.TemplateResponse(
         request,
         "operador_cadastros.html",
-        {"user": user, "pendentes": pendentes, "erro": erro},
+        {"user": user, "pendentes": pendentes, "rejeitados": rejeitados, "erro": erro},
     )
 
 
