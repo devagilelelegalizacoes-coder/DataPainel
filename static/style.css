@@ -371,6 +371,8 @@ form input:focus, form textarea:focus, form select:focus {
   font-size: 13px;
 }
 .admin-inline-form { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
+.admin-credito-form { display: flex; flex-wrap: wrap; margin-bottom: 6px; }
+.admin-credito-form input { margin: 0; padding: 5px 8px; font-size: 12.5px; border-radius: 6px; }
 .admin-inline-form button {
   background: none;
   border: none;

@@ -34,6 +34,35 @@ def estornar_creditos(user_id: int, valor: int) -> int:
         return novo_saldo
 
 
+def ajustar_creditos_manual(user_id: int, admin_id: int, valor: int, motivo: str) -> int:
+    """Ajuste manual feito pelo admin (positivo credita, negativo debita). Fica registrado para auditoria."""
+    with db_session() as conn:
+        row = conn.execute("SELECT credits FROM users WHERE id = ?", (user_id,)).fetchone()
+        novo_saldo = max(0, row["credits"] + valor)
+        conn.execute("UPDATE users SET credits = ? WHERE id = ?", (novo_saldo, user_id))
+        conn.execute(
+            "INSERT INTO ajustes_creditos (user_id, admin_id, valor, motivo) VALUES (?, ?, ?, ?)",
+            (user_id, admin_id, valor, motivo),
+        )
+        return novo_saldo
+
+
+def listar_ajustes_creditos(limit: int = 30) -> list[dict]:
+    with db_session() as conn:
+        rows = conn.execute(
+            """
+            SELECT a.*, u.name AS cliente_nome, ad.name AS admin_nome
+            FROM ajustes_creditos a
+            JOIN users u ON u.id = a.user_id
+            JOIN users ad ON ad.id = a.admin_id
+            ORDER BY a.id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
 def registrar_consulta(
     user_id: int,
     tipo: str,

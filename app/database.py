@@ -93,6 +93,17 @@ CREATE TABLE IF NOT EXISTS mensagens_chat (
     FOREIGN KEY (autor_id) REFERENCES users (id)
 );
 
+CREATE TABLE IF NOT EXISTS ajustes_creditos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    admin_id INTEGER NOT NULL,
+    valor INTEGER NOT NULL,
+    motivo TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users (id),
+    FOREIGN KEY (admin_id) REFERENCES users (id)
+);
+
 CREATE TABLE IF NOT EXISTS pagamentos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

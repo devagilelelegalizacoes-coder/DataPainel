@@ -49,6 +49,7 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Preços diferenciados por segmento/cliente | `app/pricing.py` (`resolver_custo`), `app/routers/admin.py` (`/admin/precos`), `templates/admin_precos.html` |
 | Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
 | Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
+| Ajuste manual de créditos (auditado) | `app/credits.py` (`ajustar_creditos_manual`, `listar_ajustes_creditos`), `app/routers/admin.py` (`/admin/usuarios/{id}/creditos`), tabela `ajustes_creditos` |
 
 ## Padrão obrigatório: adicionar um novo tipo de consulta
 
@@ -285,6 +286,18 @@ para qualquer tabela de override futura em vez de fazer SELECT-then-INSERT/UPDAT
   (`{"request": request, ...}` como dict único) quebra com `TypeError: unhashable type: 'dict'`.
 - Servidor uvicorn iniciado com `&` numa Bash tool call morre quando a tool call termina — sempre usar
   `run_in_background: true` no Bash tool, não `&` manual.
+- **Crédito de pagamento Mercado Pago dependia só do navegador do cliente voltar em
+  `/creditos/retorno`** (`criar_preferencia()` em `app/payments.py` não mandava `notification_url`
+  na preferência, então o Mercado Pago nunca chamava `/creditos/webhook` — se o cliente fechasse a
+  aba, o navegador falhasse no redirect, ou o pagamento fosse aprovado depois de o cliente já ter
+  saído da página, o crédito nunca era adicionado, mesmo com o pagamento aprovado no MP). Corrigido
+  adicionando `notification_url` junto com `auto_return` (mesma condição: só quando `APP_BASE_URL`
+  é `https://`, senão o Mercado Pago não consegue chamar de volta um endereço local). O webhook
+  (server-to-server) é a fonte de verdade; `/creditos/retorno` é só a confirmação visual — **não
+  remover o `notification_url`**, senão volta a depender só do navegador do cliente.
+- Para casos que escaparem mesmo assim (ou pagamentos antigos já perdidos), existe ajuste manual de
+  créditos em `/admin/usuarios` — todo ajuste fica registrado em `ajustes_creditos` (quem ajustou,
+  quanto, motivo) para auditoria; `ajustar_creditos_manual()` nunca deixa o saldo ficar negativo.
 
 ## Testando sem gastar créditos reais da APIBrasil
 

@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-header">
   <h1>Usuários</h1>
-  <p class="muted">Promova usuários a operador (fila de atendimento manual) ou administrador.</p>
+  <p class="muted">Promova usuários a operador (fila de atendimento manual) ou administrador, e ajuste créditos manualmente quando necessário (ex: pagamento não creditado automaticamente).</p>
 </div>
 
 <div class="table-wrap">
@@ -24,6 +24,11 @@
       </td>
       <td>{{ u.created_at }}</td>
       <td>
+        <form method="post" action="/admin/usuarios/{{ u.id }}/creditos" class="admin-inline-form admin-credito-form">
+          <input type="number" name="valor" placeholder="±créditos" required style="width:90px;">
+          <input type="text" name="motivo" placeholder="Motivo (ex: pagamento não creditado)" required style="width:220px;">
+          <button type="submit" class="btn-link">Ajustar créditos</button>
+        </form>
         <form method="post" action="/admin/usuarios/{{ u.id }}/operador" class="admin-inline-form">
           <button type="submit" class="btn-link">{{ "Remover operador" if u.is_operador else "Tornar operador" }}</button>
         </form>
@@ -38,4 +43,28 @@
   </tbody>
 </table>
 </div>
+
+<h2 class="section-title">Histórico de ajustes manuais</h2>
+{% if ajustes %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Cliente</th><th>Valor</th><th>Motivo</th><th>Admin</th><th>Quando</th></tr>
+  </thead>
+  <tbody>
+    {% for a in ajustes %}
+    <tr>
+      <td>{{ a.cliente_nome }}</td>
+      <td class="{{ 'restricao-ok' if a.valor > 0 else 'restricao-alerta' }}" style="border-radius:8px; padding:4px 10px; display:inline-block; font-weight:600;">{{ "+" if a.valor > 0 else "" }}{{ a.valor }}</td>
+      <td>{{ a.motivo }}</td>
+      <td>{{ a.admin_nome }}</td>
+      <td>{{ a.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhum ajuste manual registrado ainda.</p>
+{% endif %}
 {% endblock %}

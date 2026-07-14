@@ -53,6 +53,7 @@ class PagamentoService:
 
         if self._config.app_base_url.startswith("https://"):
             preference_data["auto_return"] = "approved"
+            preference_data["notification_url"] = f"{self._config.app_base_url}/creditos/webhook"
 
         resultado = self._sdk.preference().create(preference_data)
         if resultado.get("status") not in (200, 201):

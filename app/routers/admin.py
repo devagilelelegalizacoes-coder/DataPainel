@@ -12,7 +12,7 @@ from app.consulta_types import (
     get_consulta_type,
     listar_consulta_types,
 )
-from app.credits import relatorio_operadores
+from app.credits import ajustar_creditos_manual, listar_ajustes_creditos, relatorio_operadores
 from app.pricing import (
     definir_preco_cliente,
     definir_preco_segmento,
@@ -201,8 +201,19 @@ def admin_usuarios_page(request: Request):
     return templates.TemplateResponse(
         request,
         "admin_usuarios.html",
-        {"user": user, "usuarios": usuarios},
+        {"user": user, "usuarios": usuarios, "ajustes": listar_ajustes_creditos()},
     )
+
+
+@router.post("/admin/usuarios/{user_id}/creditos")
+def admin_ajustar_creditos(request: Request, user_id: int, valor: int = Form(...), motivo: str = Form(...)):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    if valor != 0 and motivo.strip():
+        ajustar_creditos_manual(user_id=user_id, admin_id=user["id"], valor=valor, motivo=motivo.strip())
+    return RedirectResponse(url="/admin/usuarios", status_code=303)
 
 
 @router.post("/admin/usuarios/{user_id}/operador")
