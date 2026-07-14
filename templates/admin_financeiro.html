@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Financeiro - {{ get_config().nome_sistema }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Financeiro</h1>
+  <p class="muted">1 crédito = R$ 1,00. Lucro = total faturado (pagamentos aprovados) menos o custo real das consultas executadas na APIBrasil.</p>
+</div>
+
+<div class="cards-row">
+  <div class="stat-card">
+    <span class="stat-icon">💰</span>
+    <span class="stat-label">Total faturado</span>
+    <span class="stat-value">R$ {{ "%.2f"|format(faturado_centavos / 100) }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📉</span>
+    <span class="stat-label">Custo na APIBrasil</span>
+    <span class="stat-value">R$ {{ "%.2f"|format(custo_centavos / 100) }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">📈</span>
+    <span class="stat-label">Lucro estimado</span>
+    <span class="stat-value" style="color: {{ 'var(--secondary-dark)' if lucro_centavos >= 0 else 'var(--error-text)' }};">R$ {{ "%.2f"|format(lucro_centavos / 100) }}</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-icon">✦</span>
+    <span class="stat-label">Créditos em aberto (clientes)</span>
+    <span class="stat-value">{{ creditos_em_aberto }}</span>
+  </div>
+</div>
+
+<h2 class="section-title">Margem por tipo de consulta</h2>
+{% if resumo_tipos %}
+<div class="table-wrap">
+<table class="table">
+  <thead>
+    <tr><th>Consulta</th><th>Execuções</th><th>Receita</th><th>Custo APIBrasil</th><th>Margem</th></tr>
+  </thead>
+  <tbody>
+    {% for r in resumo_tipos %}
+    <tr>
+      <td>{{ r.tipo_nome }}</td>
+      <td>{{ r.execucoes }}</td>
+      <td>R$ {{ "%.2f"|format(r.receita_centavos / 100) }}</td>
+      <td>R$ {{ "%.2f"|format(r.custo_centavos / 100) }}</td>
+      <td style="color: {{ 'var(--secondary-dark)' if r.margem_centavos >= 0 else 'var(--error-text)' }}; font-weight:600;">R$ {{ "%.2f"|format(r.margem_centavos / 100) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">Nenhuma consulta concluída com sucesso ainda.</p>
+{% endif %}
+{% endblock %}

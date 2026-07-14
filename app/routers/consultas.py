@@ -198,6 +198,7 @@ async def consultas_submit(
                     status="sucesso",
                     resultado_resumo=_resumo_veiculo(resultado),
                     resultado_json=json.dumps(resultado, ensure_ascii=False),
+                    custo_apibrasil_centavos=tipo.custo_apibrasil_centavos,
                 )
                 await _salvar_documentos_consulta(consulta_id, tipo, arquivos)
                 return RedirectResponse(url=f"/consultas/historico/{consulta_id}", status_code=303)

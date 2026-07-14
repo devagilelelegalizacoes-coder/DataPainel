@@ -19,6 +19,11 @@ class ConsultaType:
     manual: bool = False
     documentos_exigidos: str = ""
     segmentos_visiveis: str = ""
+    custo_apibrasil_centavos: int = 0
+
+    @property
+    def custo_apibrasil_reais(self) -> float:
+        return self.custo_apibrasil_centavos / 100
 
     @property
     def lista_campos_incluidos(self) -> list[str]:
@@ -54,6 +59,7 @@ def _row_to_type(row) -> ConsultaType:
         manual=bool(row["manual"]) if "manual" in row.keys() else False,
         documentos_exigidos=row["documentos_exigidos"] if "documentos_exigidos" in row.keys() else "",
         segmentos_visiveis=row["segmentos_visiveis"] if "segmentos_visiveis" in row.keys() else "",
+        custo_apibrasil_centavos=row["custo_apibrasil_centavos"] if "custo_apibrasil_centavos" in row.keys() else 0,
     )
 
 
@@ -86,16 +92,17 @@ def criar_consulta_type(
     manual: bool = False,
     documentos_exigidos: str = "",
     segmentos_visiveis: str = "",
+    custo_apibrasil_centavos: int = 0,
 ) -> ConsultaType:
     documentos_exigidos = _limitar_documentos_exigidos(documentos_exigidos)
     with db_session() as conn:
         conn.execute(
             """
             INSERT INTO tipos_consulta
-                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos, manual, documentos_exigidos, segmentos_visiveis)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, disponivel, campos_incluidos, manual, documentos_exigidos, segmentos_visiveis, custo_apibrasil_centavos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis),
+            (id, nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, int(disponivel), campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis, custo_apibrasil_centavos),
         )
     return get_consulta_type(id)
 
@@ -112,6 +119,7 @@ def atualizar_consulta_type(
     manual: bool = False,
     documentos_exigidos: str = "",
     segmentos_visiveis: str = "",
+    custo_apibrasil_centavos: int = 0,
 ) -> None:
     documentos_exigidos = _limitar_documentos_exigidos(documentos_exigidos)
     with db_session() as conn:
@@ -120,10 +128,10 @@ def atualizar_consulta_type(
             UPDATE tipos_consulta
             SET nome = ?, descricao = ?, icone = ?, custo_creditos = ?,
                 campo_label = ?, campo_placeholder = ?, campos_incluidos = ?, manual = ?,
-                documentos_exigidos = ?, segmentos_visiveis = ?
+                documentos_exigidos = ?, segmentos_visiveis = ?, custo_apibrasil_centavos = ?
             WHERE id = ?
             """,
-            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis, tipo_id),
+            (nome, descricao, icone, custo_creditos, campo_label, campo_placeholder, campos_incluidos, int(manual), documentos_exigidos, segmentos_visiveis, custo_apibrasil_centavos, tipo_id),
         )
 
 

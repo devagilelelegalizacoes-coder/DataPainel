@@ -21,10 +21,15 @@
         <input type="text" name="icone" maxlength="4" value="{{ editar.icone if editar else '🔍' }}">
       </div>
       <div>
-        <label>Custo (créditos)</label>
+        <label>Preço ao cliente (créditos = R$)</label>
         <input type="number" name="custo_creditos" min="0" required value="{{ editar.custo_creditos if editar else 1 }}">
       </div>
+      <div>
+        <label>Custo real na APIBrasil (R$)</label>
+        <input type="number" name="custo_apibrasil_reais" min="0" step="0.01" value="{{ '%.2f'|format(editar.custo_apibrasil_reais) if editar else '0.00' }}">
+      </div>
     </div>
+    <p class="field-hint">1 crédito = R$ 1,00. O custo real é o que essa consulta custa na APIBrasil — usado só para calcular o lucro em /admin/financeiro, não afeta o que o cliente paga.</p>
 
     <label>Descrição</label>
     <input type="text" name="descricao" value="{{ editar.descricao if editar else '' }}">
@@ -79,6 +84,7 @@
     <p class="consulta-card-desc">{{ tipo.descricao }}</p>
     <div class="consulta-card-footer">
       <span class="chip">{{ tipo.custo_creditos }} créditos</span>
+      {% if tipo.custo_apibrasil_centavos %}<span class="chip chip-muted">custo R$ {{ '%.2f'|format(tipo.custo_apibrasil_reais) }}</span>{% endif %}
       {% if tipo.manual %}<span class="chip chip-muted">Manual</span>{% endif %}
       {% if tipo.lista_documentos_exigidos %}<span class="chip chip-muted">📎 {{ tipo.lista_documentos_exigidos|length }} documento(s)</span>{% endif %}
       {% if tipo.lista_segmentos_visiveis %}<span class="chip chip-muted">👁 {{ tipo.lista_segmentos_visiveis|join(', ')|replace('despachante', 'Despachante')|replace('agencia', 'Agência') }}</span>{% endif %}

@@ -47,8 +47,8 @@ A arquitetura já está definida e testada — **siga os padrões abaixo em vez 
 | Templates Jinja2 compartilhados (registra `get_config()` como global) | `app/templates.py` — **todo router importa `templates` daqui, nunca instancia `Jinja2Templates` de novo** |
 | Páginas legais estáticas | `templates/termos.html`, `templates/privacidade.html`, rotas em `app/routers/auth.py` |
 | Preços diferenciados por segmento/cliente | `app/pricing.py` (`resolver_custo`), `app/routers/admin.py` (`/admin/precos`), `templates/admin_precos.html` |
-| Pacotes de crédito (venda) | `app/credit_packages.py` (dict fixo em código, não em DB) |
-| Pagamento (Mercado Pago Checkout Pro) | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
+| Pagamento (Mercado Pago Checkout Pro), compra livre de créditos | `app/payments.py`, `app/routers/creditos.py`, tabela `pagamentos` |
+| Financeiro (faturamento, custo real na APIBrasil, lucro) | `app/financeiro.py`, `app/routers/admin.py` (`/admin/financeiro`), `templates/admin_financeiro.html` |
 | Ajuste manual de créditos (auditado) | `app/credits.py` (`ajustar_creditos_manual`, `listar_ajustes_creditos`), `app/routers/admin.py` (`/admin/usuarios/{id}/creditos`), tabela `ajustes_creditos` |
 
 ## Padrão obrigatório: adicionar um novo tipo de consulta
@@ -276,6 +276,33 @@ tabela de overrides existentes + botão remover). `definir_preco_segmento()`/`de
 usam `INSERT ... ON CONFLICT ... DO UPDATE` (upsert) nas chaves primárias compostas
 `(tipo_profissional, tipo_consulta_id)` / `(user_id, tipo_consulta_id)` — reaproveitar esse padrão
 para qualquer tabela de override futura em vez de fazer SELECT-then-INSERT/UPDATE separado.
+
+## Compra de créditos e Financeiro (1 crédito = R$ 1,00)
+
+**Não existem mais pacotes fixos de crédito** (`app/credit_packages.py` foi removido). Em
+`/creditos`, o cliente digita a quantidade de créditos que quer (`quantidade`, 1 a 10000) e paga
+exatamente esse valor em reais — `CREDITO_CENTAVOS = 100` em `app/payments.py` é a única constante
+de conversão, sem desconto por volume. `registrar_pagamento_pendente()`/`criar_preferencia()`
+recebem `creditos: int` direto, não mais um `PacoteCredito`. A coluna `pagamentos.pacote_id`
+continua existindo no schema (não vale a pena migrar), mas agora sempre recebe o valor fixo
+`'avulso'`.
+
+Além do preço que o cliente paga (`custo_creditos`), cada card em `tipos_consulta` também guarda
+`custo_apibrasil_centavos` — o que **essa consulta custa de verdade na APIBrasil** (definido pelo
+admin em `/admin/consultas`, campo "Custo real na APIBrasil (R$)"). Esse custo é só para calcular
+lucro, nunca afeta o que o cliente paga. É gravado como **snapshot** em `consultas.custo_apibrasil_
+centavos` no momento da execução bem-sucedida (só para o caminho automático/API em
+`consultas.py`, não para consultas manuais — atendimento manual não chama a APIBrasil, então não
+tem esse custo). Snapshotar em vez de só olhar o valor atual do card evita que uma alteração de
+preço no futuro distorça o financeiro de consultas já executadas.
+
+`/admin/financeiro` (`app/financeiro.py`) cruza isso: total faturado (soma de `pagamentos` com
+`status='aprovado'`) menos total custo APIBrasil (soma de `consultas.custo_apibrasil_centavos` com
+`status='sucesso'`) = lucro estimado. Também mostra margem por tipo de consulta e total de créditos
+em aberto (soma de `users.credits` — é dinheiro já recebido mas ainda não "consumido"). Receita por
+tipo usa `consultas.custo_creditos` (o que foi cobrado de verdade, já considerando `resolver_custo()`
+— preços especiais por segmento/cliente já refletem aqui automaticamente), não o `custo_creditos`
+padrão do card.
 
 ## Sistema de créditos (não mudar o fluxo)
 

@@ -5,8 +5,9 @@ from dataclasses import dataclass
 
 import mercadopago
 
-from app.credit_packages import PacoteCredito
 from app.database import db_session
+
+CREDITO_CENTAVOS = 100  # 1 crédito = R$ 1,00
 
 
 class PagamentoError(Exception):
@@ -32,13 +33,13 @@ class PagamentoService:
         self._config = config
         self._sdk = mercadopago.SDK(config.access_token)
 
-    def criar_preferencia(self, pagamento_id: int, pacote: PacoteCredito, user_email: str) -> str:
+    def criar_preferencia(self, pagamento_id: int, creditos: int, user_email: str) -> str:
         preference_data = {
             "items": [
                 {
-                    "title": f"{pacote.nome} - {pacote.creditos} créditos APIBrasil",
+                    "title": f"{creditos} créditos APIBrasil",
                     "quantity": 1,
-                    "unit_price": pacote.valor_reais,
+                    "unit_price": creditos * (CREDITO_CENTAVOS / 100),
                     "currency_id": "BRL",
                 }
             ],
@@ -70,14 +71,14 @@ class PagamentoService:
         return resultado["response"]
 
 
-def registrar_pagamento_pendente(user_id: int, pacote: PacoteCredito) -> int:
+def registrar_pagamento_pendente(user_id: int, creditos: int) -> int:
     with db_session() as conn:
         cursor = conn.execute(
             """
             INSERT INTO pagamentos (user_id, pacote_id, creditos, valor_centavos, status)
-            VALUES (?, ?, ?, ?, 'pendente')
+            VALUES (?, 'avulso', ?, ?, 'pendente')
             """,
-            (user_id, pacote.id, pacote.creditos, pacote.valor_centavos),
+            (user_id, creditos, creditos * CREDITO_CENTAVOS),
         )
         return cursor.lastrowid
 

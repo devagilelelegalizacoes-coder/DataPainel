@@ -72,14 +72,15 @@ def registrar_consulta(
     resultado_resumo: str | None = None,
     resultado_json: str | None = None,
     erro_mensagem: str | None = None,
+    custo_apibrasil_centavos: int | None = None,
 ) -> int:
     with db_session() as conn:
         cursor = conn.execute(
             """
-            INSERT INTO consultas (user_id, tipo, placa, custo_creditos, status, resultado_resumo, resultado_json, erro_mensagem)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO consultas (user_id, tipo, placa, custo_creditos, status, resultado_resumo, resultado_json, erro_mensagem, custo_apibrasil_centavos)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (user_id, tipo, placa, custo_creditos, status, resultado_resumo, resultado_json, erro_mensagem),
+            (user_id, tipo, placa, custo_creditos, status, resultado_resumo, resultado_json, erro_mensagem, custo_apibrasil_centavos),
         )
         return cursor.lastrowid
 

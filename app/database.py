@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS tipos_consulta (
     manual INTEGER NOT NULL DEFAULT 0,
     documentos_exigidos TEXT NOT NULL DEFAULT '',
     segmentos_visiveis TEXT NOT NULL DEFAULT '',
+    custo_apibrasil_centavos INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -134,6 +135,7 @@ CREATE TABLE IF NOT EXISTS consultas (
     anexo_nome TEXT,
     anexo_tipo TEXT,
     anexo_tamanho_original INTEGER,
+    custo_apibrasil_centavos INTEGER,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (user_id) REFERENCES users (id),
     FOREIGN KEY (operador_id) REFERENCES users (id)
@@ -390,6 +392,7 @@ def init_db() -> None:
         _ensure_column(conn, "consultas", "anexo_nome", "anexo_nome TEXT")
         _ensure_column(conn, "consultas", "anexo_tipo", "anexo_tipo TEXT")
         _ensure_column(conn, "consultas", "anexo_tamanho_original", "anexo_tamanho_original INTEGER")
+        _ensure_column(conn, "consultas", "custo_apibrasil_centavos", "custo_apibrasil_centavos INTEGER")
         _ensure_column(conn, "users", "is_admin", "is_admin INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "users", "is_operador", "is_operador INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "users", "status", "status TEXT NOT NULL DEFAULT 'aprovado'")
@@ -404,6 +407,7 @@ def init_db() -> None:
         _ensure_column(conn, "tipos_consulta", "manual", "manual INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "tipos_consulta", "documentos_exigidos", "documentos_exigidos TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "tipos_consulta", "segmentos_visiveis", "segmentos_visiveis TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "tipos_consulta", "custo_apibrasil_centavos", "custo_apibrasil_centavos INTEGER NOT NULL DEFAULT 0")
         _seed_tipos_consulta(conn)
         _ensure_configuracoes(conn)
         _ensure_seed_row(conn, "nacional")

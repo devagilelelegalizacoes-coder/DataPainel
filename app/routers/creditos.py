@@ -1,9 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from app.templates import templates
 
 from app.auth import get_current_user, get_user_by_id
-from app.credit_packages import get_pacote, listar_pacotes
 from app.payments import (
     MercadoPagoConfig,
     PagamentoError,
@@ -16,6 +15,9 @@ from app.payments import (
 )
 
 router = APIRouter()
+
+CREDITOS_MIN = 1
+CREDITOS_MAX = 10000
 
 
 @router.get("/creditos", response_class=HTMLResponse)
@@ -30,29 +32,30 @@ def creditos_page(request: Request, erro: str | None = None):
         "creditos.html",
         {
             "user": user,
-            "pacotes": listar_pacotes(),
             "pagamentos": pagamentos,
             "erro": erro,
         },
     )
 
 
-@router.post("/creditos/comprar/{pacote_id}")
-def creditos_comprar(request: Request, pacote_id: str):
+@router.post("/creditos/comprar")
+def creditos_comprar(request: Request, quantidade: int = Form(...)):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=303)
 
-    pacote = get_pacote(pacote_id)
-    if pacote is None:
-        raise HTTPException(status_code=404, detail="Pacote de créditos não encontrado")
+    if quantidade < CREDITOS_MIN or quantidade > CREDITOS_MAX:
+        return RedirectResponse(
+            url=f"/creditos?erro=Informe+uma+quantidade+entre+{CREDITOS_MIN}+e+{CREDITOS_MAX}+créditos",
+            status_code=303,
+        )
 
-    pagamento_id = registrar_pagamento_pendente(user["id"], pacote)
+    pagamento_id = registrar_pagamento_pendente(user["id"], quantidade)
 
     try:
         config = MercadoPagoConfig.from_env()
         service = PagamentoService(config)
-        checkout_url = service.criar_preferencia(pagamento_id, pacote, user["email"])
+        checkout_url = service.criar_preferencia(pagamento_id, quantidade, user["email"])
     except (PagamentoError, RuntimeError) as exc:
         marcar_pagamento_status(pagamento_id, "erro")
         return RedirectResponse(

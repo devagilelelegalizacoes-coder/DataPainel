@@ -13,6 +13,12 @@ from app.consulta_types import (
     listar_consulta_types,
 )
 from app.credits import ajustar_creditos_manual, listar_ajustes_creditos, relatorio_operadores
+from app.financeiro import (
+    resumo_por_tipo,
+    total_creditos_em_aberto,
+    total_custo_apibrasil_centavos,
+    total_faturado_centavos,
+)
 from app.pricing import (
     definir_preco_cliente,
     definir_preco_segmento,
@@ -90,6 +96,7 @@ def admin_consulta_criar(
     manual: bool = Form(False),
     documentos_exigidos: str = Form(""),
     segmentos: list[str] = Form([]),
+    custo_apibrasil_reais: float = Form(0.0),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -123,6 +130,7 @@ def admin_consulta_criar(
         manual=manual,
         documentos_exigidos=documentos_exigidos,
         segmentos_visiveis=",".join(segmentos),
+        custo_apibrasil_centavos=round(max(0.0, custo_apibrasil_reais) * 100),
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -141,6 +149,7 @@ def admin_consulta_editar(
     manual: bool = Form(False),
     documentos_exigidos: str = Form(""),
     segmentos: list[str] = Form([]),
+    custo_apibrasil_reais: float = Form(0.0),
 ):
     user, redirect = _exigir_admin(request)
     if redirect:
@@ -161,6 +170,7 @@ def admin_consulta_editar(
         manual=manual,
         documentos_exigidos=documentos_exigidos,
         segmentos_visiveis=",".join(segmentos),
+        custo_apibrasil_centavos=round(max(0.0, custo_apibrasil_reais) * 100),
     )
     return RedirectResponse(url="/admin/consultas", status_code=303)
 
@@ -374,3 +384,25 @@ def admin_precos_cliente_excluir(
 
     excluir_preco_cliente(user_id, tipo_consulta_id)
     return RedirectResponse(url="/admin/precos", status_code=303)
+
+
+@router.get("/admin/financeiro", response_class=HTMLResponse)
+def admin_financeiro_page(request: Request):
+    user, redirect = _exigir_admin(request)
+    if redirect:
+        return redirect
+
+    faturado = total_faturado_centavos()
+    custo = total_custo_apibrasil_centavos()
+    return templates.TemplateResponse(
+        request,
+        "admin_financeiro.html",
+        {
+            "user": user,
+            "faturado_centavos": faturado,
+            "custo_centavos": custo,
+            "lucro_centavos": faturado - custo,
+            "creditos_em_aberto": total_creditos_em_aberto(),
+            "resumo_tipos": resumo_por_tipo(),
+        },
+    )
